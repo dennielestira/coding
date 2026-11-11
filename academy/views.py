@@ -18,6 +18,8 @@ def _session_state(request):
             "attempts": [],
             "quiz_scores": {},
             "quiz_correct": {},
+            "lesson_steps": {},
+            "quiz_positions": {},
             "study_days": [],
         },
     )
@@ -26,6 +28,8 @@ def _session_state(request):
     state.setdefault("attempts", [])
     state.setdefault("quiz_scores", {})
     state.setdefault("quiz_correct", {})
+    state.setdefault("lesson_steps", {})
+    state.setdefault("quiz_positions", {})
     state.setdefault("study_days", [])
     return state
 
@@ -156,6 +160,11 @@ def path_detail(request, slug):
 def lesson_detail(request, slug):
     lesson = get_object_or_404(Lesson, slug=slug)
     state = _session_state(request)
+    quiz_questions = list(lesson.quiz_questions.all())
+    current_step = state["lesson_steps"].get(lesson.slug, 1)
+    if lesson.slug in state["completed"]:
+        current_step = 6
+    quiz_position = state["quiz_positions"].get(lesson.slug, 0)
     activity_feedback = None
     activity_passed = None
     activity_submitted = False
@@ -164,9 +173,25 @@ def lesson_detail(request, slug):
     submitted_code = None
     quiz_summary = None
     quiz_submitted = False
+    if current_step == 4:
+        activity_passed = lesson.slug in state["activities"]
 
     if request.method == "POST":
-        if "submission" in request.POST:
+        if "advance_step" in request.POST:
+            requested_step = request.POST.get("advance_step")
+            if (
+                current_step in (1, 2)
+                and requested_step == str(current_step)
+            ):
+                current_step += 1
+                state["lesson_steps"][lesson.slug] = current_step
+            elif current_step == 4 and requested_step == "4":
+                current_step = 5 if quiz_questions else 6
+                state["lesson_steps"][lesson.slug] = current_step
+        elif "retry_activity" in request.POST and current_step in (4, 6):
+            current_step = 3
+            state["lesson_steps"][lesson.slug] = current_step
+        elif current_step == 3 and "submission" in request.POST:
             activity_submitted = True
             if lesson.slug not in state["attempts"]:
                 state["attempts"].append(lesson.slug)
@@ -186,7 +211,10 @@ def lesson_detail(request, slug):
             if activity_passed and lesson.slug not in state["activities"]:
                 state["activities"].append(lesson.slug)
 
-        elif "diagnosis" in request.POST:
+            current_step = 4
+            state["lesson_steps"][lesson.slug] = current_step
+
+        elif current_step == 3 and "diagnosis" in request.POST:
             activity_submitted = True
             if lesson.slug not in state["attempts"]:
                 state["attempts"].append(lesson.slug)
@@ -211,17 +239,48 @@ def lesson_detail(request, slug):
             if activity_passed and lesson.slug not in state["activities"]:
                 state["activities"].append(lesson.slug)
 
-        if any(key.startswith("quiz_") for key in request.POST.keys()):
+            current_step = 4
+            state["lesson_steps"][lesson.slug] = current_step
+
+        if (
+            current_step == 5
+            and quiz_position < len(quiz_questions)
+            and f"quiz_{quiz_questions[quiz_position].id}" in request.POST
+        ):
             quiz_submitted = True
+            question = quiz_questions[quiz_position]
+            quiz_progress = state["quiz_correct"].setdefault(lesson.slug, {})
+            question_key = str(question.id)
+            selected_answer = request.POST.get(f"quiz_{question.id}")
+            if selected_answer == question.options[question.correct_index]:
+                quiz_progress[question_key] = selected_answer
+            _record_study_day(state)
+        elif current_step == 5 and "next_question" in request.POST:
+            if quiz_position < len(quiz_questions):
+                current_question = quiz_questions[quiz_position]
+                saved_answer = state["quiz_correct"].get(lesson.slug, {}).get(
+                    str(current_question.id)
+                )
+                if saved_answer:
+                    if quiz_position + 1 < len(quiz_questions):
+                        quiz_position += 1
+                        state["quiz_positions"][lesson.slug] = quiz_position
+                    else:
+                        current_step = 6
+                        state["lesson_steps"][lesson.slug] = current_step
 
         _record_study_day(state)
         request.session["learning_state"] = state
         request.session.modified = True
 
-    quiz_questions = list(lesson.quiz_questions.all())
     quiz_progress = state["quiz_correct"].get(lesson.slug, {})
     quiz_items = []
     correct_count = 0
+    active_question = (
+        quiz_questions[quiz_position]
+        if quiz_position < len(quiz_questions)
+        else None
+    )
     for question in quiz_questions:
         question_key = str(question.id)
         saved_answer = quiz_progress.get(question_key)
@@ -229,7 +288,7 @@ def lesson_detail(request, slug):
         selected_answer = saved_answer if was_already_correct else None
         status = "correct" if was_already_correct else ""
 
-        if quiz_submitted and not was_already_correct:
+        if quiz_submitted and question == active_question and not was_already_correct:
             selected_answer = request.POST.get(f"quiz_{question.id}")
             correct_option = question.options[question.correct_index]
             if selected_answer == correct_option:
@@ -262,35 +321,48 @@ def lesson_detail(request, slug):
         }
         if quiz_submitted or correct_count:
             quiz_summary = summary
-            state["quiz_correct"].setdefault(lesson.slug, quiz_progress)
             state["quiz_scores"][lesson.slug] = quiz_summary
             state["quiz_scores"]["latest"] = quiz_summary
             request.session["learning_state"] = state
             request.session.modified = True
 
-    stored_score = state["quiz_scores"].get(lesson.slug)
     completed = (
-        lesson.slug in state["activities"]
-        and stored_score is not None
-        and stored_score["score"] == stored_score["total"]
+        current_step == 6
+        and lesson.slug in state["activities"]
+        and correct_count == total_questions
     )
     if completed and lesson.slug not in state["completed"]:
         state["completed"].append(lesson.slug)
         request.session["learning_state"] = state
         request.session.modified = True
 
+    if current_step == 6 and completed:
+        completion_status = "completed"
+    elif current_step == 6:
+        completion_status = "practice"
+    else:
+        completion_status = "in_progress"
+
     context = {
         "lesson": lesson,
+        "current_step": current_step,
         "activity_feedback": activity_feedback,
         "activity_passed": activity_passed,
         "activity_submitted": activity_submitted,
-        "can_review_solution": activity_submitted or lesson.slug in state["attempts"],
+        "can_review_solution": current_step >= 4 or lesson.slug in state["attempts"],
         "activity_missing": activity_missing,
         "expected_output": expected_output,
         "submitted_code": submitted_code,
         "quiz_summary": quiz_summary,
         "quiz_questions": quiz_items,
+        "active_quiz_item": (
+            quiz_items[quiz_position] if quiz_position < len(quiz_items) else None
+        ),
+        "question_number": quiz_position + 1,
+        "question_total": total_questions,
+        "has_next_question": quiz_position + 1 < total_questions,
+        "completion_status": completion_status,
         "quiz_submitted": quiz_submitted,
-        "completed": lesson.slug in state["completed"],
+        "completed": completed,
     }
     return render(request, "lesson_detail.html", context)

@@ -15,23 +15,36 @@
   <p class="lead text-muted mb-0">{{ lesson.short_description }}</p>
 </div>
 
+<div class="alert alert-primary" role="status">
+  Lesson step {{ current_step }} of 6. Complete each step to reveal the next one.
+</div>
+
+{% if current_step == 1 %}
 <section class="card shadow-sm border-0 mb-4">
   <div class="card-body p-4">
     <h2 class="h4 fw-bold">Step 1: Topic Introduction</h2>
-    <p class="mb-0">{{ lesson.introduction|linebreaksbr }}</p>
+    <p>{{ lesson.introduction|linebreaksbr }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit" name="advance_step" value="1">Continue to lesson</button>
+    </form>
   </div>
 </section>
-
+{% elif current_step == 2 %}
 <section class="card shadow-sm border-0 mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 2: Lesson and Explanation</h2>
+    <h2 class="h4 fw-bold">Step 2: Learn the Concept</h2>
     <p>{{ lesson.explanation|linebreaksbr }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit" name="advance_step" value="2">Continue to the question</button>
+    </form>
   </div>
 </section>
-
+{% elif current_step == 3 %}
 <section class="card shadow-sm border-0 mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 3: Hands-on Practice</h2>
+    <h2 class="h4 fw-bold">Step 3: Your Question or Practice</h2>
     <p>{{ lesson.activity_prompt }}</p>
     {% if lesson.slug == 'python-variables' %}
       <div class="expected-output-note mb-3">
@@ -44,34 +57,17 @@
         {% csrf_token %}
         <div class="mb-3">
           <label class="form-label">Code editor</label>
-          <div id="code-editor" class="code-editor-shell{% if activity_submitted %}{% if activity_passed %} code-check-success{% else %} code-check-error{% endif %}{% endif %}" data-language="{{ lesson.path.slug }}" data-hint="{{ lesson.hint|escapejs }}"{% if can_review_solution %} data-solution="{{ lesson.solution|escapejs }}"{% endif %}></div>
-          <textarea id="code-editor-value" name="submission" class="d-none">{% if submitted_code != None %}{{ submitted_code }}{% else %}{{ lesson.starter_code }}{% endif %}</textarea>
+          <div id="code-editor" class="code-editor-shell" data-language="{{ lesson.path.slug }}" data-hint="{{ lesson.hint|escapejs }}"></div>
+          <textarea id="code-editor-value" name="submission" class="d-none">{{ lesson.starter_code }}</textarea>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
           <button type="button" class="btn btn-outline-primary" onclick="runCode()">Run Code</button>
           <button type="button" class="btn btn-outline-secondary" onclick="resetCode()">Reset Code</button>
           <button type="button" class="btn btn-outline-info" onclick="showHint()">Show Hint</button>
-          {% if can_review_solution %}
-            <button type="button" class="btn btn-outline-warning" onclick="showSolution()">Show Solution</button>
-          {% endif %}
         </div>
         <pre id="code-output" class="console-output">Console output will appear here.</pre>
-        <div id="code-feedback" class="code-feedback {% if activity_submitted %}{% if activity_passed %}code-feedback-success{% else %}code-feedback-error{% endif %}{% else %}code-feedback-neutral{% endif %}" role="status" aria-live="polite">
-          {% if activity_submitted %}
-            <strong>{% if activity_passed %}Looks good{% else %}Needs attention{% endif %}</strong>
-            <p class="mb-1">{{ activity_feedback }}</p>
-            {% if activity_missing %}
-              <span class="fw-semibold">Review these required parts:</span>
-              <ul class="mb-0">
-                {% for missing in activity_missing %}
-                  <li><code>{{ missing }}</code></li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          {% else %}
-            Submit your code to check it. Green means required parts were found; red shows items to review. Code is not executed on the server.
-          {% endif %}
-          <p class="small mb-0 mt-2">Code is not executed on the server; submissions are checked as text.</p>
+        <div id="code-feedback" class="code-feedback code-feedback-neutral" role="status" aria-live="polite">
+          Submit your code to check it. Green means required parts were found; red shows items to review. Code is not executed on the server.
         </div>
         <button type="submit" class="btn btn-primary">Submit Answer</button>
       </form>
@@ -80,7 +76,7 @@
         {% csrf_token %}
         {% for choice in lesson.activity_choices %}
           <div class="form-check mb-2">
-            <input class="form-check-input" type="radio" name="diagnosis" id="choice-{{ forloop.counter }}" value="{{ choice }}" />
+            <input class="form-check-input" type="radio" name="diagnosis" id="choice-{{ forloop.counter }}" value="{{ choice }}" required />
             <label class="form-check-label" for="choice-{{ forloop.counter }}">{{ choice }}</label>
           </div>
         {% empty %}
@@ -91,39 +87,55 @@
         </button>
       </form>
     {% else %}
-      <div class="alert alert-light border">
-        This lesson focuses on key concepts. Read the explanation and use the knowledge check below to test your understanding.
-      </div>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" name="diagnosis" value="attempt">Continue</button>
+      </form>
     {% endif %}
-
-    {% if activity_feedback and lesson.activity_type != 'code' %}
-      <div class="alert {% if activity_passed %}alert-success{% else %}alert-warning{% endif %} mt-4">
+  </div>
+</section>
+{% elif current_step == 4 %}
+<section class="card shadow-sm border-0 mb-4">
+  <div class="card-body p-4">
+    <h2 class="h4 fw-bold">Step 4: Answer and Explanation</h2>
+    {% if activity_feedback %}
+      <div class="alert {% if activity_passed %}alert-success{% else %}alert-warning{% endif %}">
         {{ activity_feedback }}
       </div>
     {% endif %}
+    {% if activity_submitted and lesson.activity_type == 'code' %}
+      <div class="code-editor-shell {% if activity_passed %}code-check-success{% else %}code-check-error{% endif %} mb-3">
+        <strong>Your submitted code</strong>
+        <pre class="mb-0 mt-2">{{ submitted_code }}</pre>
+      </div>
+      <div class="code-feedback {% if activity_passed %}code-feedback-success{% else %}code-feedback-error{% endif %} mb-3" role="status">
+        {% if activity_passed %}Required parts found.{% else %}
+          <strong>Review these required parts:</strong>
+          <ul class="mb-0">
+            {% for missing in activity_missing %}
+              <li><code>{{ missing }}</code></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    {% endif %}
     {% if expected_output %}
-      <div class="mt-3">
+      <div class="mb-3">
         <strong>Your submitted output</strong>
         <pre class="console-output mb-0">{{ expected_output }}</pre>
       </div>
     {% endif %}
-  </div>
-</section>
-
-{% if can_review_solution %}
-<section class="card shadow-sm border-0 mb-4">
-  <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 4: Explanation After the Activity</h2>
     {% if lesson.activity_type == 'code' %}
       <p class="fw-semibold mb-2">One correct solution:</p>
       <pre class="solution-code">{{ lesson.solution }}</pre>
+      <p class="small text-muted">Code is not executed on the server; submissions are checked as text.</p>
     {% else %}
       <p><strong>Correct answer:</strong> {{ lesson.answer }}</p>
       <p>{{ lesson.solution|linebreaksbr }}</p>
     {% endif %}
     <p>{{ lesson.explanation|linebreaksbr }}</p>
     {% if lesson.slug == 'python-variables' %}
-      <p class="mb-3">The variable <code>name</code> stores the text value. <code>print(name)</code> reads that value and displays it. If you change the text in the assignment, the output changes too; the print statement can stay the same.</p>
+      <p>The variable <code>name</code> stores the text value. <code>print(name)</code> reads that value and displays it. If you change the text in the assignment, the output changes too; the print statement can stay the same.</p>
     {% endif %}
     {% if activity_submitted and not activity_passed %}
       <div class="alert alert-warning">
@@ -145,78 +157,81 @@
         {% endfor %}
       </ul>
     {% endif %}
-    <div class="alert alert-light border mb-0">
+    <div class="alert alert-light border">
       <strong>Real-world use:</strong> These small, ordered checks are the same habits technicians and developers use to solve issues reliably.
     </div>
+    <form method="post">
+      {% csrf_token %}
+      {% if not activity_passed %}
+        <button class="btn btn-outline-primary me-2" type="submit" name="retry_activity" value="1">Try the activity again</button>
+      {% endif %}
+      <button class="btn btn-primary" type="submit" name="advance_step" value="4">Continue to knowledge check</button>
+    </form>
   </div>
 </section>
-{% else %}
-<section class="card shadow-sm border-0 mb-4">
-  <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 4: Explanation After the Activity</h2>
-    <p class="mb-0 text-muted">Submit your activity to unlock the answer walkthrough and see why the solution works.</p>
-  </div>
-</section>
-{% endif %}
-
+{% elif current_step == 5 %}
 <section class="card shadow-sm border-0 mb-4">
   <div class="card-body p-4">
     <h2 class="h4 fw-bold">Step 5: Knowledge Check</h2>
-    <form method="post">
-      {% csrf_token %}
-      {% for quiz_item in quiz_questions %}
-        {% with question=quiz_item.question %}
-        <div class="mb-4">
-          <p class="fw-semibold mb-2">{{ forloop.counter }}. {{ question.question }}</p>
-          {% for option in question.options %}
-            <div class="form-check mb-2">
-              <input class="form-check-input" type="radio" name="quiz_{{ question.id }}" id="question-{{ question.id }}-{{ forloop.counter }}" value="{{ option }}" {% if option == quiz_item.selected_answer %}checked{% endif %} {% if quiz_item.locked %}disabled{% endif %} />
-              <label class="form-check-label" for="question-{{ question.id }}-{{ forloop.counter }}">{{ option }}</label>
-            </div>
-          {% endfor %}
-          {% if quiz_item.status == 'correct' %}
-            <div class="alert alert-success py-2 mb-0">
-              <strong>Correct — saved.</strong> This answer is locked in.
-              <div>{{ quiz_item.explanation }}</div>
-            </div>
-          {% elif quiz_item.status == 'wrong' %}
-            <div class="alert alert-danger py-2 mb-0">Not quite. Try this question again; correct answers stay saved and locked.</div>
-          {% elif quiz_item.status == 'missing' %}
-            <div class="alert alert-warning py-2 mb-0">Choose an answer and try this question again.</div>
-          {% endif %}
+    {% if active_quiz_item %}
+      {% with quiz_item=active_quiz_item question=active_quiz_item.question %}
+      <p class="text-muted">Question {{ question_number }} of {{ question_total }}</p>
+      <form method="post">
+        {% csrf_token %}
+        <p class="fw-semibold mb-3">{{ question.question }}</p>
+        {% for option in question.options %}
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="quiz_{{ question.id }}" id="question-{{ question.id }}-{{ forloop.counter }}" value="{{ option }}" {% if option == quiz_item.selected_answer %}checked{% endif %} {% if quiz_item.locked %}disabled{% endif %} required />
+            <label class="form-check-label" for="question-{{ question.id }}-{{ forloop.counter }}">{{ option }}</label>
+          </div>
+        {% endfor %}
+        {% if quiz_item.status == 'correct' %}
+          <div class="alert alert-success mt-3">
+            <strong>Correct — saved.</strong> {{ quiz_item.explanation }}
+          </div>
+          <button class="btn btn-primary" type="submit" name="next_question" value="1">
+            {% if has_next_question %}Continue to next question{% else %}Finish knowledge check{% endif %}
+          </button>
+        {% elif quiz_item.status == 'wrong' %}
+          <div class="alert alert-danger mt-3">Not quite. Try this question again; the correct answer is not revealed yet.</div>
+          <button class="btn btn-primary" type="submit">Try again</button>
+        {% elif quiz_item.status == 'missing' %}
+          <div class="alert alert-warning mt-3">Choose an answer before continuing.</div>
+          <button class="btn btn-primary" type="submit">Check answer</button>
+        {% else %}
+          <button class="btn btn-primary" type="submit">Check answer</button>
+        {% endif %}
+      </form>
+      {% endwith %}
+      {% if quiz_summary %}
+        <div class="alert alert-info mt-4 mb-0">
+          <strong>Correct answers so far:</strong> {{ quiz_summary.score }}/{{ quiz_summary.total }}.
         </div>
-        {% endwith %}
-      {% empty %}
-        <p class="text-muted mb-0">No quiz questions are available for this lesson yet.</p>
-      {% endfor %}
-      {% if quiz_questions %}
-        <button type="submit" class="btn btn-success">
-          {% if quiz_summary and quiz_summary.score == quiz_summary.total %}All answers correct{% else %}Check answers{% endif %}
-        </button>
       {% endif %}
-    </form>
-
-    {% if quiz_summary %}
-      <div class="alert alert-info mt-4 mb-0">
-        <strong>Correct answers:</strong> {{ quiz_summary.score }}/{{ quiz_summary.total }} ({{ quiz_summary.percentage }}%).
-        {% if quiz_summary.score < quiz_summary.total %}Correct answers stay locked; retry any missed questions above.{% else %}All answers are saved.{% endif %}
-      </div>
+    {% else %}
+      <p class="text-muted">No knowledge-check questions are available for this lesson.</p>
+      <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-primary" type="submit" name="advance_step" value="4">Continue</button>
+      </form>
     {% endif %}
   </div>
 </section>
-
+{% elif current_step == 6 %}
 <section class="card shadow-sm border-0 mb-4">
   <div class="card-body p-4">
     <h2 class="h4 fw-bold">Step 6: Completion</h2>
-    <p>Answer every knowledge-check question correctly and complete the practice activity to finish this lesson.</p>
-    <div class="d-flex justify-content-between align-items-center">
-      <span class="fw-semibold">Lesson status</span>
-      {% if completed %}
-        <span class="badge bg-success">Completed</span>
-      {% else %}
-        <span class="badge bg-primary">In progress</span>
-      {% endif %}
-    </div>
+    {% if completion_status == 'completed' %}
+      <p>You answered each knowledge-check question correctly and completed the practice activity.</p>
+      <span class="badge bg-success fs-6">Lesson completed</span>
+    {% else %}
+      <p>You finished the knowledge check. Complete the practice activity to finish this lesson.</p>
+      <form method="post" class="mt-3">
+        {% csrf_token %}
+        <button class="btn btn-primary" type="submit" name="retry_activity" value="1">Return to practice</button>
+      </form>
+    {% endif %}
   </div>
 </section>
+{% endif %}
 {% endblock %}
