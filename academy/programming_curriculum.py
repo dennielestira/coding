@@ -1,0 +1,277 @@
+def _quiz_question(prompt, correct_option, other_options, explanation):
+    options = list(other_options)
+    correct_index = sum(map(ord, prompt)) % (len(options) + 1)
+    options.insert(correct_index, correct_option)
+    return {
+        "question": prompt,
+        "options": options,
+        "correct_index": correct_index,
+        "explanation": explanation,
+    }
+
+
+PROGRAM_TOPICS = {
+    "python": (
+        4,
+        [
+            ("Python: Numbers and Arithmetic", "Numbers can be integers or decimals, and arithmetic operators calculate new values.", "Store 8 and 5 in two variables, add them, and print the total.", "first = 8\nsecond = 5\ntotal = first + second\nprint(total)", ["first", "second", "+", "print"]),
+            ("Python: Work with Strings", "Strings are text values. Methods such as lower() and upper() return changed text without changing the original value.", "Store the word HELLO in a variable and print it in lowercase.", 'word = "HELLO"\nprint(word.lower())', ["word", "lower", "print"]),
+            ("Python: Get User Input", "input() pauses a program to read text typed by a user. Its result is a string.", "Ask for a name and print a greeting that includes that name.", 'name = input("What is your name? ")\nprint("Hello, " + name)', ["input", "name", "print"]),
+            ("Python: Convert Data Types", "Convert input text to a number before doing arithmetic. int() converts whole-number text to an integer.", "Convert the text '7' to an integer, add 3, and print the result.", 'number = int("7")\nprint(number + 3)', ["int", "number", "print"]),
+            ("Python: Compare Values", "Comparison operators such as >, <, and == produce a Boolean value: True or False.", "Check whether score is at least 60 and print the comparison result.", "score = 72\npassed = score >= 60\nprint(passed)", ["score", ">=", "print"]),
+            ("Python: Combine Conditions", "The and, or, and not operators combine Boolean conditions to express more complete decisions.", "Print Access granted only when has_badge and is_active are both True.", 'has_badge = True\nis_active = True\nif has_badge and is_active:\n    print("Access granted")', ["has_badge", "is_active", "and", "print"]),
+            ("Python: Use elif", "elif checks another condition when the preceding if condition was false, allowing several outcomes.", "Print Warm when temperature is above 20, otherwise print Cool.", 'temperature = 24\nif temperature > 30:\n    print("Hot")\nelif temperature > 20:\n    print("Warm")\nelse:\n    print("Cool")', ["if", "elif", "else", "temperature"]),
+            ("Python: Create a List", "A list stores an ordered collection of values in one variable and can be updated as the program runs.", "Create a list of three favorite tools and print the list.", 'tools = ["terminal", "editor", "browser"]\nprint(tools)', ["tools", "[", "print"]),
+            ("Python: Access List Items", "List indexes start at zero, so index 0 refers to the first item. Negative indexes count backward from the end.", "Create a list of three colors and print the first color using its index.", 'colors = ["red", "blue", "green"]\nprint(colors[0])', ["colors", "[0]", "print"]),
+            ("Python: Repeat with a for Loop", "A for loop runs its indented block once for each item in a sequence.", "Loop through the names list and print each name.", 'names = ["Mina", "Leo", "Kai"]\nfor name in names:\n    print(name)', ["for", "names", "print"]),
+            ("Python: Repeat with while", "A while loop repeats as long as its condition is true. Update the condition's values to avoid an endless loop.", "Use a while loop to print 1, 2, and 3, then stop.", "count = 1\nwhile count <= 3:\n    print(count)\n    count += 1", ["while", "count", "<=", "print"]),
+            ("Python: Define a Function", "A function groups reusable instructions under a name. Define it with def, then call it to run its body.", "Define a function called greet that prints Hello, then call the function.", 'def greet():\n    print("Hello")\n\ngreet()', ["def", "greet", "print"]),
+            ("Python: Use Parameters and Return Values", "Parameters let a function receive values. return sends a result back to the code that called the function.", "Write add_numbers with two parameters that returns their sum.", "def add_numbers(first, second):\n    return first + second", ["def", "add_numbers", "return"]),
+            ("Python: Store Data in a Dictionary", "A dictionary stores values under named keys, which makes related information easy to look up.", "Create a person dictionary with a name key and print that value.", 'person = {"name": "Ari"}\nprint(person["name"])', ["person", "name", "print"]),
+            ("Python: Handle an Error", "try and except let a program respond to expected errors instead of stopping without a helpful message.", "Convert text to an integer and print Invalid number if conversion raises ValueError.", 'try:\n    number = int("abc")\nexcept ValueError:\n    print("Invalid number")', ["try", "except", "ValueError", "print"]),
+            ("Python: Import a Module", "Modules package reusable Python code. Import a module to use its documented functions.", "Import the math module and print the result of math.sqrt(16).", "import math\nprint(math.sqrt(16))", ["import", "math", "sqrt", "print"]),
+            ("Python: Build a Small Summary", "Small programs combine variables, collections, loops, and output. Breaking a task into steps makes it easier to test.", "Use a loop to add the numbers in [2, 4, 6] into total, then print total.", "numbers = [2, 4, 6]\ntotal = 0\nfor number in numbers:\n    total += number\nprint(total)", ["numbers", "total", "for", "print"]),
+        ],
+    ),
+    "html": (
+        3,
+        [
+            ("HTML: Set Up the Document", "The doctype and html element identify a modern HTML document. The head contains page information and the body contains visible content.", "Write the basic document structure with a title of IT Lab and a body heading.", "<!doctype html>\n<html>\n<head>\n  <title>IT Lab</title>\n</head>\n<body>\n  <h1>Welcome</h1>\n</body>\n</html>", ["<!doctype html>", "<html>", "<head>", "<body>"]),
+            ("HTML: Add Headings and Paragraphs", "Headings describe the outline of a page, while paragraphs group related sentences. Use heading levels in a logical order.", "Add an h1 heading called Support Desk and a paragraph that says We can help.", "<h1>Support Desk</h1>\n<p>We can help.</p>", ["<h1>", "</h1>", "<p>", "</p>"]),
+            ("HTML: Use Semantic Page Regions", "Semantic elements such as header, main, and footer describe the purpose of page regions to browsers and assistive technologies.", "Create header, main, and footer regions, with one heading inside main.", "<header>IT Academy</header>\n<main>\n  <h1>Lessons</h1>\n</main>\n<footer>Learning lab</footer>", ["<header>", "<main>", "<footer>"]),
+            ("HTML: Make a List", "Use ul for an unordered list or ol for a numbered sequence. Each item belongs inside an li element.", "Create an unordered list containing Keyboard and Mouse.", "<ul>\n  <li>Keyboard</li>\n  <li>Mouse</li>\n</ul>", ["<ul>", "<li>", "Keyboard", "Mouse"]),
+            ("HTML: Add an Image with Alt Text", "The img element embeds an image. Useful alternative text communicates the image's purpose to people who cannot see it.", "Add an image at computer.png with the alternative text Desktop computer.", '<img src="computer.png" alt="Desktop computer">', ["<img", "src=", "alt="]),
+            ("HTML: Build a Simple Form", "A form groups controls that collect information. A label should identify each field so users know what to enter.", "Create a label and text input for a user's email address.", '<label for="email">Email</label>\n<input id="email" name="email" type="email">', ["<label", "for=", "<input", 'type="email"']),
+            ("HTML: Label Form Controls", "Connecting a label's for value to a control's id gives the control a clear accessible name.", "Create a checkbox with id updates and a matching label that says Email me updates.", '<input id="updates" type="checkbox">\n<label for="updates">Email me updates</label>', ["id=", "type=\"checkbox\"", "<label", "for="]),
+            ("HTML: Choose Input Types", "Specific input types, such as email and number, help browsers provide suitable controls and basic validation.", "Add an input for a phone number and a numeric input for a quantity.", '<input type="tel" name="phone">\n<input type="number" name="quantity">', ["type=\"tel\"", "type=\"number\""]),
+            ("HTML: Create a Data Table", "Tables represent data with rows and columns. Use th for column headings and td for ordinary data cells.", "Create a table with a Device heading and one row containing Laptop.", "<table>\n  <tr><th>Device</th></tr>\n  <tr><td>Laptop</td></tr>\n</table>", ["<table>", "<th>", "<td>"]),
+            ("HTML: Link to a Page Section", "An element id can be used as a fragment target. A link with an href beginning with # jumps to that target.", "Add a link labeled Troubleshooting that points to the section with id troubleshooting.", '<a href="#troubleshooting">Troubleshooting</a>\n<section id="troubleshooting">Help steps</section>', ["href=\"#troubleshooting\"", "id=\"troubleshooting\"", "<a"]),
+            ("HTML: Add Useful Attributes", "Attributes add information to elements. Use unique ids for page targets and classes for reusable styling hooks.", "Add a paragraph with class notice and id welcome.", '<p class="notice" id="welcome">Welcome</p>', ["class=\"notice\"", "id=\"welcome\"", "<p>"]),
+            ("HTML: Write an HTML Comment", "Comments help developers leave notes in source code. Browsers do not display the comment text as page content.", "Add a comment reminding a teammate to review the contact section.", "<!-- Review the contact section -->", ["<!--", "contact section", "-->"]),
+            ("HTML: Add Navigation", "A nav element groups major navigation links. Link text should describe the destination rather than rely on vague wording.", "Create a nav element with links to Home and Lessons.", '<nav>\n  <a href="/">Home</a>\n  <a href="/lessons/">Lessons</a>\n</nav>', ["<nav>", "<a", "Home", "Lessons"]),
+            ("HTML: Add a Button", "A button is an interactive control. Set its type explicitly so a button inside a form does not submit unexpectedly.", "Add a button labeled Check answer that does not submit a form.", '<button type="button">Check answer</button>', ["<button", "type=\"button\"", "Check answer"]),
+            ("HTML: Add Audio or Video Controls", "Media elements can provide playback controls. Include fallback text so users know when their browser cannot play the media.", "Add a video element with controls and a short fallback message.", "<video controls>\n  Your browser cannot play this video.\n</video>", ["<video", "controls", "</video>"]),
+            ("HTML: Add Page Metadata", "Metadata in the head describes the document. A viewport meta tag helps a page use the device's screen width on mobile.", "Add a viewport meta tag for a responsive page.", '<meta name="viewport" content="width=device-width, initial-scale=1">', ["<meta", "name=\"viewport\"", "width=device-width"]),
+            ("HTML: Group Related Content", "The section element groups related content, while article can represent a self-contained item such as a lesson card.", "Create an article with a heading called Network Basics and a short paragraph.", "<article>\n  <h2>Network Basics</h2>\n  <p>Learn how devices connect.</p>\n</article>", ["<article>", "<h2>", "<p>"]),
+            ("HTML: Check a Form Before Submission", "Built-in attributes such as required help prevent incomplete values. Client-side checks improve usability but do not replace server-side validation.", "Create a required email input with an associated label.", '<label for="contact-email">Email</label>\n<input id="contact-email" type="email" required>', ["type=\"email\"", "required", "for="]),
+        ],
+    ),
+    "css": (
+        2,
+        [
+            ("CSS: Select a Class", "A class selector begins with a dot and can style every element that uses that class.", "Create a .notice rule that makes notice text bold.", ".notice {\n  font-weight: bold;\n}", [".notice", "font-weight", "bold"]),
+            ("CSS: Select an Element by ID", "An id selector begins with # and targets an element with that id. IDs should be unique within a page.", "Create a rule for #banner that adds a blue background.", "#banner {\n  background-color: blue;\n}", ["#banner", "background-color", "blue"]),
+            ("CSS: Set Text and Background Colors", "The color property changes foreground text, while background-color changes the element's background.", "Style .card with dark text and a light gray background.", ".card {\n  color: #222;\n  background-color: #eee;\n}", [".card", "color:", "background-color:"]),
+            ("CSS: Choose a Readable Font", "Font-family sets the preferred typeface and can include fallback fonts in case the first choice is unavailable.", "Set the body font to Arial with a sans-serif fallback.", "body {\n  font-family: Arial, sans-serif;\n}", ["body", "font-family", "Arial", "sans-serif"]),
+            ("CSS: Understand the Box Model", "Each element is laid out as a box with content, padding, border, and margin. box-sizing: border-box makes declared widths include padding and border.", "Apply border-box sizing to every element using the universal selector.", "*, *::before, *::after {\n  box-sizing: border-box;\n}", ["box-sizing", "border-box", "*"]),
+            ("CSS: Add Spacing", "Padding adds space inside an element's border; margin adds space outside it.", "Give .panel 16 pixels of inner padding and 12 pixels of outer margin.", ".panel {\n  padding: 16px;\n  margin: 12px;\n}", [".panel", "padding:", "margin:"]),
+            ("CSS: Add a Border", "Borders outline an element and can be tuned by width, style, and color.", "Give .card a one-pixel solid gray border.", ".card {\n  border: 1px solid gray;\n}", [".card", "border:", "solid"]),
+            ("CSS: Use Display Properties", "Display controls how an element participates in layout. Flex and grid are useful for arranging groups of items.", "Make .toolbar a flex container with a 12-pixel gap.", ".toolbar {\n  display: flex;\n  gap: 12px;\n}", [".toolbar", "display: flex", "gap:"]),
+            ("CSS: Align Items with Flexbox", "Flexbox arranges items along a row or column and provides alignment controls for that one-dimensional layout.", "Center items vertically in a row using Flexbox.", ".toolbar {\n  display: flex;\n  align-items: center;\n}", ["display: flex", "align-items: center"]),
+            ("CSS: Create a Grid Layout", "CSS Grid arranges content in rows and columns. repeat() can create equal tracks without repeating values manually.", "Create a two-column grid with equal-width columns.", ".cards {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n}", ["display: grid", "grid-template-columns", "repeat(2, 1fr)"]),
+            ("CSS: Position an Element", "Positioning changes how an element is placed. A relatively positioned parent can anchor an absolutely positioned child.", "Position .badge at the top-right of a relatively positioned .card.", ".card { position: relative; }\n.badge { position: absolute; top: 0; right: 0; }", ["position: relative", "position: absolute", "top:", "right:"]),
+            ("CSS: Style a Hover State", "The :hover pseudo-class applies styles while a pointing device is over an element. Keep interactive feedback clear and consistent.", "Change a link's color when it is hovered.", "a:hover {\n  color: blue;\n}", ["a:hover", "color:", "blue"]),
+            ("CSS: Understand Specificity", "When rules conflict, the cascade considers origin, importance, specificity, and source order. Prefer clear class selectors over overly specific rules.", "Write a reusable .warning class that makes text orange.", ".warning {\n  color: orange;\n}", [".warning", "color:", "orange"]),
+            ("CSS: Use Relative Units", "Relative units such as rem scale with user settings, while percentages can adapt to a containing element's size.", "Set the body font size to 1rem and a content width to 90%.", "body { font-size: 1rem; }\n.content { width: 90%; }", ["1rem", "90%", "font-size", "width"]),
+            ("CSS: Make a Responsive Layout", "Media queries apply styles only when conditions such as viewport width match, helping layouts adapt to smaller screens.", "At widths up to 600px, make .cards use one column.", "@media (max-width: 600px) {\n  .cards { grid-template-columns: 1fr; }\n}", ["@media", "max-width: 600px", "grid-template-columns: 1fr"]),
+            ("CSS: Reuse a CSS Variable", "Custom properties store reusable values and are read with var(). Define shared values on :root.", "Define --brand-color as navy and use it for links.", ":root { --brand-color: navy; }\na { color: var(--brand-color); }", ["--brand-color", "var(--brand-color)", ":root"]),
+            ("CSS: Add a Transition", "Transitions smooth changes in a property. Keep them subtle and respect users who prefer reduced motion.", "Add a short background-color transition to .button.", ".button {\n  transition: background-color 0.2s ease;\n}", [".button", "transition:", "background-color"]),
+            ("CSS: Show Keyboard Focus", "Keyboard users need a visible focus indicator to know which control is active. Do not remove outlines without providing an accessible replacement.", "Add a visible outline to buttons when focused.", "button:focus-visible {\n  outline: 3px solid blue;\n}", [":focus-visible", "outline:", "button"]),
+            ("CSS: Put a Component Together", "A component rule can combine spacing, readable colors, and responsive sizing. Small, consistent rules are easier to maintain.", "Style .lesson-card with padding, a border, and rounded corners.", ".lesson-card {\n  padding: 1rem;\n  border: 1px solid #ccc;\n  border-radius: 0.5rem;\n}", [".lesson-card", "padding:", "border:", "border-radius:"]),
+        ],
+    ),
+    "javascript": (
+        2,
+        [
+            ("JavaScript: Choose let or const", "Use const for bindings that will not be reassigned and let when reassignment is needed. Avoid var in most modern code.", "Declare a let variable named attempts with value 0, then increase it by one.", "let attempts = 0;\nattempts += 1;", ["let", "attempts", "+="]),
+            ("JavaScript: Understand Value Types", "JavaScript values include strings, numbers, booleans, arrays, objects, and null. typeof can help inspect many values.", "Store true in isOnline and log its type.", "const isOnline = true;\nconsole.log(typeof isOnline);", ["isOnline", "typeof", "console.log"]),
+            ("JavaScript: Use Arithmetic Operators", "Arithmetic operators calculate numeric results. Parentheses make the intended order of operations clear.", "Calculate the total cost of three items that cost 4 each and log it.", "const total = 3 * 4;\nconsole.log(total);", ["total", "*", "console.log"]),
+            ("JavaScript: Join Text with a Template Literal", "Template literals use backticks and ${} to insert values into strings.", "Create a name variable and log a greeting with a template literal.", 'const name = "Mina";\nconsole.log(`Hello, ${name}!`);', ["name", "`", "${name}", "console.log"]),
+            ("JavaScript: Create an Array", "Arrays store ordered values. Use square brackets to create one and access items by their zero-based index.", "Create an array with red and blue, then log the first item.", 'const colors = ["red", "blue"];\nconsole.log(colors[0]);', ["colors", "[", "console.log"]),
+            ("JavaScript: Create an Object", "Objects group related values under property names. Dot notation is a convenient way to read a known property.", "Create a device object with type set to laptop and log its type.", 'const device = { type: "laptop" };\nconsole.log(device.type);', ["device", "type:", "console.log"]),
+            ("JavaScript: Make a Decision", "An if/else statement runs one of two blocks depending on whether a Boolean condition is true.", "If score is at least 60, log Pass; otherwise log Try again.", 'const score = 72;\nif (score >= 60) {\n  console.log("Pass");\n} else {\n  console.log("Try again");\n}', ["if", "score", ">=", "else", "console.log"]),
+            ("JavaScript: Repeat with a for Loop", "A for loop repeats a block while its update and condition control how the counter changes.", "Use a for loop to log the numbers 0, 1, and 2.", "for (let i = 0; i < 3; i++) {\n  console.log(i);\n}", ["for", "let i", "i < 3", "console.log"]),
+            ("JavaScript: Write a Function", "Functions package reusable steps. A function declaration can be called by its name after it is defined.", "Create and call a function called showHelp that logs Help is available.", 'function showHelp() {\n  console.log("Help is available");\n}\nshowHelp();', ["function", "showHelp", "console.log"]),
+            ("JavaScript: Return a Function Result", "return sends a function's result to the caller. A returned value can be stored, combined, or displayed.", "Write a double function that returns number multiplied by 2.", "function double(number) {\n  return number * 2;\n}", ["function", "double", "return", "* 2"]),
+            ("JavaScript: Transform an Array with map", "map creates a new array by applying a callback to each item in the original array.", "Use map to create a new array with each number increased by one.", "const values = [1, 2, 3];\nconst nextValues = values.map(value => value + 1);", ["values", ".map", "value + 1"]),
+            ("JavaScript: Filter an Array", "filter returns a new array containing only items that pass a test.", "Use filter to keep numbers greater than 10.", "const values = [4, 12, 18];\nconst largeValues = values.filter(value => value > 10);", ["filter", "value > 10"]),
+            ("JavaScript: Find an HTML Element", "The DOM represents a page as objects. querySelector finds the first element matching a CSS selector.", "Select the element with id status and store it in a variable.", 'const statusElement = document.querySelector("#status");', ["document.querySelector", "#status", "statusElement"]),
+            ("JavaScript: Update Text Safely", "textContent changes an element's text without interpreting it as HTML markup.", "Select #status and set its text to Ready.", 'const status = document.querySelector("#status");\nstatus.textContent = "Ready";', ["querySelector", "textContent", "Ready"]),
+            ("JavaScript: Respond to a Click", "addEventListener registers a function to run when an event occurs, such as a button click.", "Add a click listener to a button that logs Button clicked.", 'const button = document.querySelector("button");\nbutton.addEventListener("click", () => console.log("Button clicked"));', ["addEventListener", "click", "console.log"]),
+            ("JavaScript: Read a Form Value", "Form controls expose their current value through the value property. Read user input only when needed and validate it appropriately.", "Select #email and store its current value in emailValue.", 'const emailInput = document.querySelector("#email");\nconst emailValue = emailInput.value;', ["querySelector", "#email", ".value"]),
+            ("JavaScript: Convert Data to JSON", "JSON.stringify converts supported JavaScript data into JSON text, which is useful for data exchange.", "Create a settings object and convert it to a JSON string.", 'const settings = { theme: "dark" };\nconst jsonText = JSON.stringify(settings);', ["settings", "JSON.stringify", "jsonText"]),
+            ("JavaScript: Handle Errors with try/catch", "try/catch lets code handle an exception and provide a useful response instead of stopping unexpectedly.", "Parse JSON text inside try/catch and log a simple error message if parsing fails.", 'try {\n  JSON.parse("{");\n} catch (error) {\n  console.log("Could not read the data");\n}', ["try", "JSON.parse", "catch", "console.log"]),
+            ("JavaScript: Wait for an Async Result", "Promises represent results that may arrive later. async/await makes promise-based code easier to read.", "Write an async function that awaits Promise.resolve('ready') and returns the result.", "async function getStatus() {\n  const status = await Promise.resolve(\"ready\");\n  return status;\n}", ["async function", "await", "Promise.resolve", "return"]),
+        ],
+    ),
+    "sql": (
+        2,
+        [
+            ("SQL: Sort Query Results", "ORDER BY sorts returned rows by one or more columns. ASC is ascending; DESC is descending.", "Sort employees by name in ascending order.", "SELECT name FROM employees ORDER BY name ASC;", ["SELECT", "FROM", "ORDER BY", "ASC"]),
+            ("SQL: Limit the Number of Rows", "LIMIT caps the number of rows returned, which is useful when exploring a large table.", "Return the first five rows from the devices table.", "SELECT * FROM devices LIMIT 5;", ["SELECT", "FROM", "LIMIT 5"]),
+            ("SQL: Remove Duplicate Values", "DISTINCT returns each unique value once for the selected columns.", "List each distinct department from employees.", "SELECT DISTINCT department FROM employees;", ["SELECT DISTINCT", "department", "FROM"]),
+            ("SQL: Count Records", "COUNT() is an aggregate function that counts rows or non-null values in a column.", "Count all rows in the tickets table.", "SELECT COUNT(*) FROM tickets;", ["COUNT(*)", "FROM tickets"]),
+            ("SQL: Group Rows", "GROUP BY collects rows with matching values so an aggregate can summarize each group.", "Count tickets for each status using GROUP BY.", "SELECT status, COUNT(*) FROM tickets GROUP BY status;", ["COUNT(*)", "GROUP BY", "status"]),
+            ("SQL: Filter Groups with HAVING", "HAVING filters grouped results after aggregation; WHERE filters individual rows before grouping.", "Show departments with more than three employees.", "SELECT department, COUNT(*) FROM employees GROUP BY department HAVING COUNT(*) > 3;", ["GROUP BY", "HAVING", "COUNT(*)"]),
+            ("SQL: Add a Record with INSERT", "INSERT INTO adds a row to a table. Name columns explicitly so the values are clear.", "Insert a device with name Monitor into the devices table.", "INSERT INTO devices (name) VALUES ('Monitor');", ["INSERT INTO", "devices", "VALUES"]),
+            ("SQL: Update a Record Safely", "UPDATE changes existing rows. A specific WHERE condition is important to avoid changing every row.", "Set the status to Closed for the ticket with id 12.", "UPDATE tickets SET status = 'Closed' WHERE id = 12;", ["UPDATE tickets", "SET status", "WHERE id"]),
+            ("SQL: Delete a Specific Record", "DELETE removes rows from a table. Preview the matching rows and use a precise WHERE clause before deleting.", "Write a delete statement for the test record with id 99 in devices.", "DELETE FROM devices WHERE id = 99;", ["DELETE FROM devices", "WHERE id"]),
+            ("SQL: Find Missing Values", "NULL represents missing or unknown data. Use IS NULL or IS NOT NULL rather than comparing NULL with equals.", "Find employees who do not yet have an assigned manager.", "SELECT name FROM employees WHERE manager_id IS NULL;", ["SELECT", "IS NULL", "manager_id"]),
+            ("SQL: Match Text Patterns", "LIKE checks a text pattern. The percent sign matches any sequence of characters.", "Find tickets whose subject starts with Network.", "SELECT subject FROM tickets WHERE subject LIKE 'Network%';", ["LIKE", "Network%", "WHERE"]),
+            ("SQL: Match a Set of Values", "IN tests whether a value matches any item in a supplied set, which can be clearer than several OR conditions.", "Find tickets with status Open or Pending.", "SELECT id FROM tickets WHERE status IN ('Open', 'Pending');", ["WHERE", "IN", "Open", "Pending"]),
+            ("SQL: Match a Range", "BETWEEN checks whether a value falls within an inclusive range.", "Find tickets created between dates represented by start_date and end_date.", "SELECT id FROM tickets WHERE created_at BETWEEN '2026-01-01' AND '2026-01-31';", ["BETWEEN", "AND", "created_at"]),
+            ("SQL: Use Table Aliases", "An alias gives a table a short name within a query, making joins easier to read.", "Select a ticket id using the alias t for the tickets table.", "SELECT t.id FROM tickets AS t;", ["tickets AS t", "t.id", "SELECT"]),
+            ("SQL: Join Related Tables", "A JOIN combines rows from related tables using a matching condition, often connecting a foreign key to an id.", "Show ticket subjects with the matching employee name using requester_id and employees.id.", "SELECT tickets.subject, employees.name\nFROM tickets\nJOIN employees ON tickets.requester_id = employees.id;", ["JOIN employees", "ON", "requester_id", "employees.id"]),
+            ("SQL: Add a Required Column", "A NOT NULL constraint requires a column to have a value when a row is inserted.", "Create a devices table with an integer id and a required text name.", "CREATE TABLE devices (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL\n);", ["CREATE TABLE", "PRIMARY KEY", "NOT NULL"]),
+            ("SQL: Use a Transaction", "Transactions group changes so they can be committed together or rolled back when something goes wrong.", "Show the basic start, commit, and rollback transaction statements.", "BEGIN;\nUPDATE accounts SET status = 'Active' WHERE id = 1;\nCOMMIT;\n-- Use ROLLBACK instead of COMMIT to cancel the transaction.", ["BEGIN", "COMMIT", "ROLLBACK"]),
+            ("SQL: Understand Indexes", "An index can speed up lookups on selected columns but uses storage and can add work to writes.", "Create an index on the email column of the users table.", "CREATE INDEX idx_users_email ON users (email);", ["CREATE INDEX", "users", "email"]),
+            ("SQL: Query Data Responsibly", "Reliable queries select needed columns, filter carefully, and test changes with previews or transactions.", "Write a read-only query that returns id and status for open tickets, sorted by id.", "SELECT id, status FROM tickets WHERE status = 'Open' ORDER BY id;", ["SELECT id", "WHERE status", "ORDER BY"]),
+        ],
+    ),
+    "php": (
+        2,
+        [
+            ("PHP: Create a Variable", "PHP variables begin with a dollar sign. Assigning a value lets you reuse it later in a script.", "Store the text Help desk in a variable named team and echo it.", '<?php\n$team = "Help desk";\necho $team;', ["$team", "=", "echo"]),
+            ("PHP: Work with Data Types", "PHP values can be strings, integers, floats, booleans, arrays, and more. Type checks can help understand input.", "Store 5 in a variable and check whether it is an integer.", "<?php\n$count = 5;\nvar_dump(is_int($count));", ["$count", "is_int", "var_dump"]),
+            ("PHP: Join Strings", "The dot operator concatenates strings in PHP. Keep spaces in the string values when they are needed in the output.", "Join first and last name with a space, then echo the result.", '<?php\n$first = "Ari";\n$last = "Lee";\necho $first . " " . $last;', ["$first", "$last", ".", "echo"]),
+            ("PHP: Store Values in an Array", "Indexed arrays hold an ordered collection of values. Square brackets access an item by its zero-based position.", "Create an array with two device names and echo the first item.", '<?php\n$devices = ["Laptop", "Tablet"];\necho $devices[0];', ["$devices", "[0]", "echo"]),
+            ("PHP: Use an Associative Array", "Associative arrays map named keys to values, making related fields easier to recognize.", "Create an associative array with a status key set to Open and echo the status.", '<?php\n$ticket = ["status" => "Open"];\necho $ticket["status"];', ["$ticket", "=>", "status", "echo"]),
+            ("PHP: Make a Decision", "if and else run different blocks depending on a condition. Braces make the code boundaries clear.", "If $count is greater than zero, echo Items found; otherwise echo Empty.", '<?php\n$count = 2;\nif ($count > 0) {\n    echo "Items found";\n} else {\n    echo "Empty";\n}', ["if", "$count", "else", "echo"]),
+            ("PHP: Repeat with foreach", "foreach processes each value in an iterable collection without needing to manage an index manually.", "Use foreach to echo every item in a devices array.", '<?php\n$devices = ["Laptop", "Tablet"];\nforeach ($devices as $device) {\n    echo $device;\n}', ["foreach", "$devices", "as", "echo"]),
+            ("PHP: Define a Function", "Functions package reusable instructions. A function runs when it is called by name.", "Define a function called showMessage that echoes Ready, then call it.", '<?php\nfunction showMessage() {\n    echo "Ready";\n}\nshowMessage();', ["function", "showMessage", "echo"]),
+            ("PHP: Pass a Function Parameter", "Parameters let a function use values supplied by the caller, avoiding hard-coded repeated logic.", "Define greet with a name parameter and echo a greeting using it.", '<?php\nfunction greet($name) {\n    echo "Hello " . $name;\n}', ["function", "greet", "$name", "echo"]),
+            ("PHP: Return a Value", "return ends a function and sends a value back to its caller.", "Write a function doubleValue that returns number multiplied by two.", "<?php\nfunction doubleValue($number) {\n    return $number * 2;\n}", ["function", "doubleValue", "return", "* 2"]),
+            ("PHP: Read a Form Field", "A submitted form value may be missing or untrusted. Check that it exists and validate it before using it.", "<?php\n$email = $_POST['email'] ?? '';\nif (filter_var($email, FILTER_VALIDATE_EMAIL)) {\n    echo 'Valid email';\n}", "Check for the email field safely, then validate it with FILTER_VALIDATE_EMAIL.", ["$_POST", "??", "filter_var", "FILTER_VALIDATE_EMAIL"]),
+            ("PHP: Escape Text for HTML", "Escape untrusted text before displaying it in HTML. htmlspecialchars helps prevent data from being interpreted as markup.", "Echo a user-supplied name using htmlspecialchars with quotes and UTF-8 handling.", "<?php\necho htmlspecialchars($name, ENT_QUOTES, 'UTF-8');", ["htmlspecialchars", "ENT_QUOTES", "UTF-8"]),
+            ("PHP: Validate Numeric Input", "Validation checks whether input meets the expected format before the application uses it.", "Validate a submitted quantity as an integer before processing it.", "<?php\n$quantity = filter_input(INPUT_POST, 'quantity', FILTER_VALIDATE_INT);\nif ($quantity !== false && $quantity !== null) {\n    echo $quantity;\n}", ["filter_input", "FILTER_VALIDATE_INT", "INPUT_POST"]),
+            ("PHP: Include a Reusable File", "include loads a reusable PHP file. Use a clear path and follow the application's error-handling conventions.", "Include the shared header file from the includes folder.", "<?php\ninclude __DIR__ . '/includes/header.php';", ["include", "__DIR__", "header.php"]),
+            ("PHP: Use a Prepared Database Query", "Prepared statements separate SQL structure from user values, helping prevent SQL injection. Bind values rather than joining input into query text.", "Prepare a PDO query that finds a user by email using a named placeholder.", '$statement = $pdo->prepare("SELECT id FROM users WHERE email = :email");\n$statement->execute(["email" => $email]);', ["prepare", ":email", "execute"]),
+            ("PHP: Handle Exceptions", "try/catch handles exceptions raised by operations and provides a controlled error path.", "Wrap a risky operation in try/catch and log the exception message.", "<?php\ntry {\n    performTask();\n} catch (Throwable $error) {\n    error_log($error->getMessage());\n}", ["try", "catch", "error_log"]),
+            ("PHP: Encode JSON", "json_encode converts PHP data into JSON text for data exchange. Check its result when encoding can fail.", "Encode an array with a status key to JSON.", "<?php\n$data = ['status' => 'ok'];\n$json = json_encode($data);", ["json_encode", "$data", "$json"]),
+            ("PHP: Work with Dates", "DateTime objects represent dates and times and provide formatting methods.", "Create a DateTime object and format it as year-month-day.", "<?php\n$date = new DateTime();\necho $date->format('Y-m-d');", ["DateTime", "->format", "Y-m-d"]),
+            ("PHP: Create a Simple Class", "A class defines a reusable type with properties and methods. Objects are created from classes.", "Define a Device class with a public name property.", "<?php\nclass Device {\n    public string $name;\n}", ["class Device", "public", "$name"]),
+        ],
+    ),
+    "linux-commands": (
+        2,
+        [
+            ("Linux: Print the Current Directory", "pwd prints the current working directory so you can confirm where relative paths refer.", "Enter the command that prints the current directory.", "pwd", ["pwd"]),
+            ("Linux: Change Directories", "cd changes the shell's current directory. Use a known path and check your location when unsure.", "Enter a command to move into the Documents directory.", "cd Documents", ["cd", "Documents"]),
+            ("Linux: Show Detailed File Information", "ls -l lists directory entries with details such as permissions, owner, size, and modification time.", "List files in the current folder using the long listing format.", "ls -l", ["ls", "-l"]),
+            ("Linux: Create a Directory", "mkdir creates a directory. Choose a clear name and verify the parent path before creating files.", "Create a folder named practice.", "mkdir practice", ["mkdir", "practice"]),
+            ("Linux: Create an Empty File", "touch creates an empty file if it does not exist and updates its timestamp if it does.", "Create an empty file named notes.txt.", "touch notes.txt", ["touch", "notes.txt"]),
+            ("Linux: Copy a File", "cp copies files. Confirm the source and destination so you do not overwrite important data.", "Copy notes.txt to notes-backup.txt.", "cp notes.txt notes-backup.txt", ["cp", "notes.txt", "notes-backup.txt"]),
+            ("Linux: Move or Rename a File", "mv moves or renames a file. Check the destination carefully because an existing file may be replaced.", "Rename draft.txt to final.txt in the same folder.", "mv draft.txt final.txt", ["mv", "draft.txt", "final.txt"]),
+            ("Linux: Remove a File Carefully", "rm removes files and usually does not move them to a recycle bin. Verify the exact target before using it.", "Write the command to remove only the temporary file named sample.tmp.", "rm sample.tmp", ["rm", "sample.tmp"]),
+            ("Linux: Read a Short Text File", "cat prints a file's contents to the terminal and is useful for short text files.", "Display the contents of readme.txt.", "cat readme.txt", ["cat", "readme.txt"]),
+            ("Linux: Browse a Long Text File", "less lets you browse a long file one screen at a time and exit without changing the file.", "Open system.log with a pager for reading.", "less system.log", ["less", "system.log"]),
+            ("Linux: Search Text with grep", "grep searches text for a pattern. Start with a specific file and a clear search term.", "Search access.log for the word timeout.", "grep 'timeout' access.log", ["grep", "timeout", "access.log"]),
+            ("Linux: Find Files by Name", "find searches directory trees using criteria such as a file name. Limit the starting directory to keep searches focused.", "Search the current directory tree for files named report.txt.", "find . -name 'report.txt'", ["find", ".", "-name", "report.txt"]),
+            ("Linux: Read File Permissions", "The first characters in ls -l output describe permissions for owner, group, and others.", "Show detailed permissions for script.sh.", "ls -l script.sh", ["ls", "-l", "script.sh"]),
+            ("Linux: Change Permissions Carefully", "chmod changes access permissions. Grant only the access needed and confirm the file and policy before changing it.", "Add execute permission for the owner of deploy.sh without changing other permissions.", "chmod u+x deploy.sh", ["chmod", "u+x", "deploy.sh"]),
+            ("Linux: Use Elevated Privileges Carefully", "sudo runs an approved command with elevated privileges. Use it only when needed and understand the command before confirming.", "Show the safe pattern for running an approved command with elevated privileges.", "sudo <approved-command>", ["sudo", "approved-command"]),
+            ("Linux: Connect Commands with a Pipe", "A pipe sends one command's output to another command as input, allowing small tools to work together.", "List files and send the output to grep to find names containing log.", "ls | grep 'log'", ["ls", "|", "grep", "log"]),
+            ("Linux: Redirect Output to a New File", "The > operator redirects output and overwrites the destination file. Use it only when overwriting is intended.", "Redirect the output of `echo ready` to a new file named status.txt.", "echo ready > status.txt", ["echo", ">", "status.txt"]),
+            ("Linux: Inspect Running Processes", "ps reports process information. A process listing can help identify what is currently running.", "Show a detailed listing of running processes for the current terminal.", "ps -f", ["ps", "-f"]),
+            ("Linux: Check Available Disk Space", "df reports available filesystem space. Human-readable units make the output easier to interpret.", "Show filesystem space in human-readable units.", "df -h", ["df", "-h"]),
+        ],
+    ),
+    "git-and-github": (
+        2,
+        [
+            ("Git: Initialize a Repository", "git init creates repository metadata in the current directory. Confirm your location before initializing.", "Initialize a Git repository in the current project folder.", "git init", ["git", "init"]),
+            ("Git: Stage a Specific File", "git add stages selected changes for the next commit. Staging one named file helps keep a commit focused.", "Stage only the file README.md.", "git add README.md", ["git add", "README.md"]),
+            ("Git: Create a Commit", "A commit records staged changes in repository history. Use a short message that explains the change.", "Commit staged changes with the message Add project notes.", 'git commit -m "Add project notes"', ["git commit", "-m", "Add project notes"]),
+            ("Git: Read Recent History", "git log displays commit history. Compact options can make a long history easier to scan.", "Show a compact list of recent commits.", "git log --oneline", ["git log", "--oneline"]),
+            ("Git: Review Unstaged Changes", "git diff shows changes that are not staged. Review the diff before deciding what to commit.", "View unstaged changes in the working tree.", "git diff", ["git diff"]),
+            ("Git: Review Staged Changes", "git diff --staged shows changes selected for the next commit, which helps catch accidental files or edits.", "Review the changes currently staged for commit.", "git diff --staged", ["git diff", "--staged"]),
+            ("Git: Create a Branch", "A branch provides a separate line of work so a change can be developed without immediately changing the main branch.", "Create a branch named add-help-page.", "git branch add-help-page", ["git branch", "add-help-page"]),
+            ("Git: Switch Branches", "Switching branches changes the checked-out version of files. Commit or safely save work before switching.", "Switch to the existing branch named add-help-page.", "git switch add-help-page", ["git switch", "add-help-page"]),
+            ("Git: Merge a Branch", "Merging integrates changes from one branch into the currently checked-out branch. Confirm the target branch first.", "While on main, merge changes from add-help-page.", "git merge add-help-page", ["git merge", "add-help-page"]),
+            ("Git: Understand a Merge Conflict", "A merge conflict occurs when Git cannot automatically combine overlapping edits. Review both sides and edit the file to the intended result.", "After resolving a conflict in a file, stage that file to mark the resolution.", "git add README.md", ["git add", "README.md"]),
+            ("Git: View Remote Repositories", "A remote is a named reference to another repository, often hosted for collaboration.", "List configured remotes and their URLs.", "git remote -v", ["git remote", "-v"]),
+            ("Git: Clone a Repository", "git clone copies a remote repository and its history into a new local directory.", "Clone the example repository from https://example.com/team/lab.git.", "git clone https://example.com/team/lab.git", ["git clone", "example.com/team/lab.git"]),
+            ("Git: Fetch Remote Updates", "git fetch downloads remote references and objects without merging them into the current branch.", "Fetch updates from the origin remote.", "git fetch origin", ["git fetch", "origin"]),
+            ("Git: Pull Remote Changes", "git pull fetches remote changes and integrates them into the current branch. Check local changes and branch state first.", "Pull updates for the current branch from origin.", "git pull origin", ["git pull", "origin"]),
+            ("Git: Push a Branch", "git push sends local commits to a remote. Confirm the branch and repository before sharing changes.", "Push the current branch to origin.", "git push origin HEAD", ["git push", "origin", "HEAD"]),
+            ("Git: Ignore Generated Files", "A .gitignore file lists patterns for files that should not be tracked, such as local caches or generated output.", "Add a pattern that ignores Python bytecode cache folders.", "__pycache__/", ["__pycache__/"]),
+            ("Git: Unstage a File Safely", "git restore --staged removes a file from the index while keeping its working-tree changes.", "Unstage notes.txt but keep the file edits.", "git restore --staged notes.txt", ["git restore", "--staged", "notes.txt"]),
+            ("Git: Write a Clear Commit Message", "A useful commit message summarizes one focused change so teammates can understand the history.", "Write a commit command with a concise message describing a printer troubleshooting lesson.", 'git commit -m "Add printer troubleshooting lesson"', ["git commit", "-m", "printer troubleshooting lesson"]),
+            ("Git: Create a Version Tag", "A tag names a specific commit, often to mark a release. Confirm the target commit and team naming convention.", "Create a lightweight tag named v1.0.0 for the current commit.", "git tag v1.0.0", ["git tag", "v1.0.0"]),
+        ],
+    ),
+}
+
+
+def build_program_lessons():
+    for path_slug, (first_order, topics) in PROGRAM_TOPICS.items():
+        comment_prefix = {
+            "python": "#",
+            "html": "<!--",
+            "css": "/*",
+            "javascript": "//",
+            "sql": "--",
+            "php": "//",
+            "linux-commands": "#",
+            "git-and-github": "#",
+        }[path_slug]
+
+        for offset, (title, focus, prompt, solution, keywords) in enumerate(topics):
+            order = first_order + offset
+            topic_name = title.split(": ", 1)[-1]
+            slug = f"{path_slug}-topic-{order:02}"
+            yield {
+                "path": path_slug,
+                "title": title,
+                "slug": slug,
+                "short_description": focus,
+                "introduction": (
+                    f"This beginner lesson introduces {topic_name.lower()} in "
+                    f"{path_slug.replace('-', ' ')}. You will practice one small task "
+                    "and check your understanding before moving on."
+                ),
+                "explanation": focus,
+                "activity_type": "code",
+                "activity_prompt": prompt,
+                "activity_choices": [],
+                "starter_code": f"{comment_prefix} Complete the activity below"
+                + (" -->" if path_slug == "html" else " */" if path_slug == "css" else ""),
+                "expected_keywords": keywords,
+                "hint": (
+                    f"Break the task into small steps. Review the example solution for "
+                    f"{topic_name.lower()} only after submitting your first attempt."
+                ),
+                "answer": solution,
+                "solution": solution,
+                "difficulty": "Beginner",
+                "order": order,
+                "quiz": [
+                    _quiz_question(
+                        f"What is the main idea of {topic_name.lower()}?",
+                        focus,
+                        [
+                            "It removes the need to review or test changes.",
+                            "It changes the computer's hardware automatically.",
+                        ],
+                        focus,
+                    ),
+                    _quiz_question(
+                        f"What does the activity about {topic_name.lower()} ask you to practice?",
+                        prompt,
+                        [
+                            "Delete unrelated files to make the program shorter.",
+                            "Skip the task and assume the result is correct.",
+                        ],
+                        f"The activity is: {prompt}",
+                    ),
+                    _quiz_question(
+                        "What is a useful habit after making a small code change?",
+                        "Review the result and test the change.",
+                        [
+                            "Ignore any error messages.",
+                            "Change several unrelated things at the same time.",
+                        ],
+                        "Small, checked changes make it easier to understand and fix mistakes.",
+                    ),
+                ],
+            }

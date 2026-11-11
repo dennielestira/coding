@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | IT Skills Academy{% endblock %}
+
+{% block content %}
+<section class="hero-section rounded-4 p-4 p-lg-5 mb-4 shadow-sm">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-8">
+      <p class="text-uppercase fw-semibold text-primary mb-2">Your personal IT training lab</p>
+      <h1 class="display-5 fw-bold mb-3">Build practical skills for your IT career</h1>
+      <p class="lead text-muted mb-4">
+        Learn by doing: write code, investigate realistic support tickets, and build confidence with hardware and networks.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary btn-lg" href="{% url 'path_index' %}">Explore learning paths</a>
+        {% if continue_lesson %}
+          <a class="btn btn-outline-primary btn-lg" href="{% url 'lesson_detail' continue_lesson.slug %}">Continue learning</a>
+        {% endif %}
+      </div>
+      <form class="mt-3" method="post" action="{% url 'reset_progress' %}" onsubmit="return confirm('Reset all lesson progress and quiz answers? This cannot be undone.');">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger" type="submit">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset all lessons
+        </button>
+      </form>
+    </div>
+    <div class="col-lg-4">
+      <div class="summary-card rounded-4 p-4 text-center">
+        <div class="display-3 fw-bold text-primary">{{ progress_percentage }}%</div>
+        <p class="mb-3 text-muted">of lessons completed in this browser</p>
+        <div class="progress" role="progressbar" aria-label="Learning progress" aria-valuenow="{{ progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+        </div>
+        <p class="small text-muted mt-2 mb-0">{{ completed_lessons }} of {{ total_lessons }} lessons completed</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mb-5" id="learning-paths">
+  <div class="mb-4">
+    <p class="text-uppercase text-primary fw-semibold mb-1">Choose your direction</p>
+    <h2 class="fw-bold mb-0">Three ways to build job-ready skills</h2>
+  </div>
+  <div class="row g-4">
+    {% for track in learning_tracks %}
+      <div class="col-lg-4">
+        <article class="track-card {{ track.theme }} h-100">
+          <div class="track-icon"><i class="bi {{ track.icon }}"></i></div>
+          <h3 class="h4 fw-bold">{{ track.title }}</h3>
+          <p class="text-muted">{{ track.description }}</p>
+          <p class="track-goal"><i class="bi bi-check-circle-fill me-2"></i>{{ track.goal }}</p>
+          <div class="track-paths">
+            {% for path in track.paths %}
+              <a href="{% url 'path_detail' path.slug %}" class="track-path-link">
+                <span>{{ path.title }}</span>
+                <i class="bi bi-arrow-up-right"></i>
+              </a>
+            {% endfor %}
+          </div>
+          <a class="btn btn-outline-primary mt-3" href="{% url 'path_index' %}">Browse all learning paths</a>
+        </article>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="row g-4 mb-4" aria-label="Your learning activity">
+  <div class="col-md-4">
+    <div class="mini-card h-100">
+      <h2 class="h6 text-uppercase text-muted">Completed lessons</h2>
+      <div class="display-6 fw-bold text-success">{{ completed_lessons }}</div>
+      <p class="mb-0 text-muted">Your progress is saved for this browser session.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="mini-card h-100">
+      <h2 class="h6 text-uppercase text-muted">Learning streak</h2>
+      <div class="display-6 fw-bold text-warning">{{ streak }} day{{ streak|pluralize }}</div>
+      <p class="mb-0 text-muted">Complete a practice or quiz today to keep your streak active.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="mini-card h-100">
+      <h2 class="h6 text-uppercase text-muted">Latest knowledge check</h2>
+      {% if skill_score != None %}
+        <div class="display-6 fw-bold text-primary">{{ skill_score }}%</div>
+        <p class="mb-0 text-muted">Your most recent quiz result.</p>
+      {% else %}
+        <div class="h4 fw-bold text-primary">Not started</div>
+        <p class="mb-0 text-muted">Complete a lesson knowledge check to see a score.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

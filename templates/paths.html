@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Learning Paths | IT Skills Academy{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <p class="text-uppercase text-primary fw-semibold mb-1">Choose a track</p>
+    <h1 class="fw-bold mb-0">Learning paths</h1>
+  </div>
+  <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">Back to dashboard</a>
+</div>
+
+<div class="row g-4">
+  {% for path in paths %}
+    <div class="col-md-6 col-xl-4">
+      <a href="{% url 'path_detail' path.slug %}" class="text-decoration-none text-reset">
+        <div class="path-card h-100">
+          <div class="path-icon bg-soft"><i class="bi {{ path.icon }}"></i></div>
+          <span class="badge text-bg-light text-dark mb-2">{{ path.get_category_display }}</span>
+          <h4>{{ path.title }}</h4>
+          <p>{{ path.description }}</p>
+          <div class="d-flex justify-content-between align-items-center mt-auto">
+            <span class="text-muted">{{ path.lesson_count }} lessons</span>
+            <i class="bi bi-arrow-right"></i>
+          </div>
+        </div>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

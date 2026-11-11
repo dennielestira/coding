@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ path.title }} | IT Skills Academy{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <a href="{% url 'path_index' %}" class="btn btn-outline-secondary btn-sm mb-3">Back to paths</a>
+  <div class="d-flex align-items-center gap-3 mb-2">
+    <div class="path-icon bg-soft"><i class="bi {{ path.icon }}"></i></div>
+    <div>
+      <p class="text-uppercase text-primary fw-semibold mb-1">{{ path.get_category_display }}</p>
+      <h1 class="fw-bold mb-0">{{ path.title }}</h1>
+    </div>
+  </div>
+  <p class="lead text-muted mt-3 mb-0">{{ path.description }}</p>
+</div>
+
+<div class="row g-4">
+  {% for lesson in lessons %}
+    <div class="col-md-6">
+      <a href="{% url 'lesson_detail' lesson.slug %}" class="text-decoration-none text-reset">
+        <div class="lesson-card h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge {% if lesson.difficulty == 'Intermediate' %}text-bg-warning{% else %}text-bg-light text-dark{% endif %}">{{ lesson.difficulty }}</span>
+            <span class="text-muted small">Lesson {{ forloop.counter }}</span>
+          </div>
+          <h3 class="h4 fw-bold">{{ lesson.title }}</h3>
+          <p>{{ lesson.short_description }}</p>
+          <div class="d-flex justify-content-between align-items-center mt-auto">
+            <span class="text-primary fw-semibold">Open lesson</span>
+            <i class="bi bi-arrow-right-circle text-primary"></i>
+          </div>
+        </div>
+      </a>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info">
+        No lessons are available for this path yet. Please check back soon.
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
