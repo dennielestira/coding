@@ -27,6 +27,19 @@ For deployment, set `DJANGO_SECRET_KEY` to a secure, unique value, set
 `DJANGO_DEBUG=false`, and set `DJANGO_ALLOWED_HOSTS` to a comma-separated list
 of the hostnames serving the application.
 
+## Deploy on Render
+
+Configure the Render web service with these commands:
+
+- **Build Command:** `pip install -r requirements.txt && python manage.py migrate && python manage.py seed_content`
+- **Start Command:** `gunicorn it_skills_academy.wsgi:application --bind 0.0.0.0:$PORT`
+
+Set `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, and `DJANGO_ALLOWED_HOSTS` in the
+service's environment variables. Include the service's `onrender.com` hostname
+in `DJANGO_ALLOWED_HOSTS`. The WSGI application is
+`it_skills_academy.wsgi:application`; `academy.wsgi:application` is not a valid
+module for this project.
+
 ## Tests and checks
 
 ```powershell
