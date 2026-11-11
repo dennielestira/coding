@@ -31,12 +31,13 @@ of the hostnames serving the application.
 
 Configure the Render web service with these commands:
 
-- **Build Command:** `pip install -r requirements.txt`
+- **Build Command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput`
 - **Start Command:** `python manage.py migrate --noinput && python manage.py seed_content && exec gunicorn it_skills_academy.wsgi:application --bind 0.0.0.0:$PORT`
 
 The start command applies migrations and loads starter content against the
 runtime database before serving requests. Update the Render service's existing
-Start Command to this value, then redeploy.
+Start Command and Build Command to these values, then redeploy. WhiteNoise
+serves the collected CSS and JavaScript from `STATIC_ROOT`.
 
 Set `DJANGO_SECRET_KEY` and `DJANGO_DEBUG=false` in the service's environment
 variables. Render's `RENDER_EXTERNAL_HOSTNAME` is added to `ALLOWED_HOSTS`
