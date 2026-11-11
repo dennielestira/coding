@@ -31,8 +31,12 @@ of the hostnames serving the application.
 
 Configure the Render web service with these commands:
 
-- **Build Command:** `pip install -r requirements.txt && python manage.py migrate && python manage.py seed_content`
-- **Start Command:** `gunicorn it_skills_academy.wsgi:application --bind 0.0.0.0:$PORT`
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `python manage.py migrate --noinput && python manage.py seed_content && exec gunicorn it_skills_academy.wsgi:application --bind 0.0.0.0:$PORT`
+
+The start command applies migrations and loads starter content against the
+runtime database before serving requests. Update the Render service's existing
+Start Command to this value, then redeploy.
 
 Set `DJANGO_SECRET_KEY` and `DJANGO_DEBUG=false` in the service's environment
 variables. Render's `RENDER_EXTERNAL_HOSTNAME` is added to `ALLOWED_HOSTS`
