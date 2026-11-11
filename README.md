@@ -34,9 +34,10 @@ Configure the Render web service with these commands:
 - **Build Command:** `pip install -r requirements.txt && python manage.py migrate && python manage.py seed_content`
 - **Start Command:** `gunicorn it_skills_academy.wsgi:application --bind 0.0.0.0:$PORT`
 
-Set `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=false`, and `DJANGO_ALLOWED_HOSTS` in the
-service's environment variables. Include the service's `onrender.com` hostname
-in `DJANGO_ALLOWED_HOSTS`. The WSGI application is
+Set `DJANGO_SECRET_KEY` and `DJANGO_DEBUG=false` in the service's environment
+variables. Render's `RENDER_EXTERNAL_HOSTNAME` is added to `ALLOWED_HOSTS`
+automatically. Set `DJANGO_ALLOWED_HOSTS` to a comma-separated list if you also
+use a custom domain. The WSGI application is
 `it_skills_academy.wsgi:application`; `academy.wsgi:application` is not a valid
 module for this project.
 
