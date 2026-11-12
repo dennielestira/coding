@@ -19,6 +19,9 @@ ALLOWED_HOSTS = [
 render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
+vercel_hostname = "coding-seven-phi.vercel.app"
+if vercel_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(vercel_hostname)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
