@@ -22,6 +22,14 @@ if render_hostname and render_hostname not in ALLOWED_HOSTS:
 vercel_hostname = "coding-seven-phi.vercel.app"
 if vercel_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(vercel_hostname)
+for vercel_env_var in (
+    "VERCEL_URL",
+    "VERCEL_BRANCH_URL",
+    "VERCEL_PROJECT_PRODUCTION_URL",
+):
+    vercel_deployment_hostname = os.environ.get(vercel_env_var)
+    if vercel_deployment_hostname and vercel_deployment_hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(vercel_deployment_hostname)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
