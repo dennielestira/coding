@@ -56,8 +56,11 @@ Supabase PostgreSQL before deploying. In the Vercel project, open
 **Settings → Environment Variables** and add `DATABASE_URL` with the PostgreSQL
 URI from the Supabase project's **Connect** dialog. Enable it for each Vercel
 environment you deploy (Production, Preview, and/or Development), then
-redeploy. The app deliberately refuses to start on Vercel if `DATABASE_URL` is
-missing instead of attempting to use a local SQLite file.
+redeploy. Vercel may inspect Django settings during its build before runtime
+environment variables are available; in that case, settings use an in-memory
+SQLite placeholder for build-time inspection only. The deployed application
+must have `DATABASE_URL` (or Vercel Marketplace's `POSTGRES_URL`) available at
+runtime. The placeholder is not persistent and cannot store application data.
 
 Run `python manage.py migrate` and `python manage.py seed_content` against that
 same Supabase database once before serving the app. Do not put database

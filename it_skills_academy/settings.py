@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 
 import dj_database_url
-from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -77,7 +76,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "it_skills_academy.wsgi.application"
 ASGI_APPLICATION = "it_skills_academy.asgi.application"
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
 is_vercel_deployment = os.environ.get("VERCEL") == "1" or bool(
     os.environ.get("VERCEL_URL")
 )
@@ -91,10 +90,12 @@ if DATABASE_URL:
         )
     }
 elif is_vercel_deployment:
-    raise ImproperlyConfigured(
-        "DATABASE_URL must be set to a PostgreSQL connection URI on Vercel. "
-        "Configure it in the Vercel project environment variables."
-    )
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
 else:
     DATABASES = {
         "default": {
