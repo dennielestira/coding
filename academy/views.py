@@ -8,6 +8,20 @@ from django.utils import timezone
 from .forms import CodeSubmissionForm
 from .models import LearningPath, Lesson
 
+PROGRAMMING_EXAMPLES = {
+    "python": ("Python: display a message", 'message = "Hello, learner!"\nprint(message)'),
+    "html": ("HTML: add a paragraph", "<p>Welcome to the learning lab.</p>"),
+    "css": ("CSS: style a paragraph", "p {\n  color: #3659d9;\n}"),
+    "javascript": (
+        "JavaScript: log a message",
+        'const message = "Hello, learner!";\nconsole.log(message);',
+    ),
+    "sql": ("SQL: read a value", "SELECT 'Hello, learner!' AS message;"),
+    "php": ("PHP: display a message", '<?php\n$message = "Hello, learner!";\necho $message;'),
+    "linux-commands": ("Linux: inspect the current folder", "pwd\nls"),
+    "git-and-github": ("Git: check your changes", "git status"),
+}
+
 
 def _session_state(request):
     state = request.session.get(
@@ -154,12 +168,51 @@ def path_index(request):
 def path_detail(request, slug):
     path = get_object_or_404(LearningPath, slug=slug)
     lessons = path.lessons.all()
-    return render(request, "path_detail.html", {"path": path, "lessons": lessons})
+    completed_lessons = set(_session_state(request)["completed"])
+    completed_count = sum(lesson.slug in completed_lessons for lesson in lessons)
+    total_lessons = len(lessons)
+    progress_percentage = (
+        round(completed_count / total_lessons * 100) if total_lessons else 0
+    )
+    return render(
+        request,
+        "path_detail.html",
+        {
+            "path": path,
+            "lessons": lessons,
+            "completed_lessons": completed_lessons,
+            "completed_count": completed_count,
+            "progress_percentage": progress_percentage,
+        },
+    )
 
 
 def lesson_detail(request, slug):
     lesson = get_object_or_404(Lesson, slug=slug)
     state = _session_state(request)
+    example_lesson = None
+    example_title = None
+    example_code = None
+    if lesson.activity_type == "code" and lesson.path.category == "programming":
+        code_lessons = Lesson.objects.filter(
+            path=lesson.path,
+            activity_type="code",
+        ).exclude(pk=lesson.pk)
+        example_lesson = (
+            code_lessons.filter(order__lt=lesson.order)
+            .order_by("-order", "-title")
+            .first()
+        )
+        if example_lesson is None:
+            example_lesson = code_lessons.order_by("order", "title").first()
+        if example_lesson:
+            example_title = example_lesson.title
+            example_code = example_lesson.solution
+        else:
+            example_title, example_code = PROGRAMMING_EXAMPLES.get(
+                lesson.path.slug,
+                (f"{lesson.path.title}: a small code example", lesson.starter_code),
+            )
     quiz_questions = list(lesson.quiz_questions.all())
     current_step = state["lesson_steps"].get(lesson.slug, 1)
     if lesson.slug in state["completed"]:
@@ -345,6 +398,9 @@ def lesson_detail(request, slug):
 
     context = {
         "lesson": lesson,
+        "example_lesson": example_lesson,
+        "example_title": example_title,
+        "example_code": example_code,
         "current_step": current_step,
         "activity_feedback": activity_feedback,
         "activity_passed": activity_passed,

@@ -37,6 +37,24 @@ class LearningLabTests(TestCase):
         self.assertContains(response, "Hardware and Networking")
         self.assertEqual(len(response.context["learning_tracks"]), 3)
 
+    def test_programming_lesson_shows_a_different_worked_code_example_before_practice(self):
+        lesson = Lesson.objects.get(slug="python-variables")
+        lesson_url = reverse("lesson_detail", args=[lesson.slug])
+
+        self.client.get(lesson_url)
+        response = self.client.post(lesson_url, {"advance_step": "1"})
+
+        example_lesson = response.context["example_lesson"]
+        self.assertContains(response, "A quick example")
+        self.assertTrue(response.context["example_code"])
+        if example_lesson:
+            self.assertNotEqual(example_lesson.pk, lesson.pk)
+            self.assertIn("sample-code", response.content.decode())
+            self.assertNotContains(response, lesson.solution)
+        else:
+            self.assertContains(response, "Python: display a message")
+        self.assertContains(response, "Try it yourself")
+
     def test_every_learning_path_has_lesson_content_and_three_quiz_questions(self):
         paths = LearningPath.objects.prefetch_related("lessons__quiz_questions")
 
@@ -81,31 +99,32 @@ class LearningLabTests(TestCase):
         lesson_url = reverse("lesson_detail", args=[lesson.slug])
 
         response = self.client.get(lesson_url)
-        self.assertContains(response, "Step 1: Topic Introduction")
-        self.assertNotContains(response, "Learn the Concept")
+        self.assertContains(response, "What you’ll learn")
+        self.assertNotContains(response, "A quick example")
         self.assertNotContains(response, "One correct solution:")
 
         response = self.client.post(lesson_url, {"advance_step": "1"})
-        self.assertContains(response, "Step 2: Learn the Concept")
-        self.assertNotContains(response, "Your Question or Practice")
+        self.assertContains(response, "Learn the concept")
+        self.assertContains(response, "A quick example")
+        self.assertNotContains(response, "Try the coding challenge")
 
         response = self.client.post(lesson_url, {"advance_step": "2"})
-        self.assertContains(response, "Step 3: Your Question or Practice")
-        self.assertNotContains(response, "Step 4: Answer and Explanation")
+        self.assertContains(response, "Try the coding challenge")
+        self.assertNotContains(response, "Your answer and explanation")
         self.assertNotContains(response, 'name = "Alex"')
 
         response = self.client.post(
             lesson_url,
             {"submission": 'name = "Alex"\nprint(name)'},
         )
-        self.assertContains(response, "Step 4: Answer and Explanation")
+        self.assertContains(response, "Your answer and explanation")
         self.assertContains(response, "One correct solution:")
-        self.assertNotContains(response, "Step 5: Knowledge Check")
+        self.assertNotContains(response, "Check your understanding")
 
         response = self.client.post(lesson_url, {"advance_step": "4"})
-        self.assertContains(response, "Question 1 of 3")
+        self.assertContains(response, "Question")
         self.assertEqual(len(response.context["quiz_questions"]), 3)
-        self.assertContains(response, "Check answer")
+        self.assertContains(response, "Check my answer")
         self.assertNotContains(response, "Question 2 of 3")
 
     def test_quiz_keeps_correct_answers_and_allows_wrong_answers_to_retry(self):
@@ -128,7 +147,7 @@ class LearningLabTests(TestCase):
         first_results = first_response.context["quiz_questions"]
         self.assertTrue(first_results[0]["locked"])
         self.assertNotContains(first_response, "Question 2 of 3")
-        self.assertContains(first_response, "Correct — saved.")
+        self.assertContains(first_response, "That’s right!")
 
         self.client.post(reverse("lesson_detail", args=[lesson.slug]), {"next_question": "1"})
 
@@ -139,10 +158,7 @@ class LearningLabTests(TestCase):
             },
         )
         self.assertEqual(wrong_response.context["quiz_questions"][1]["status"], "wrong")
-        self.assertNotContains(
-            wrong_response,
-            f"Correct — saved.</strong> {second_question.explanation}",
-        )
+        self.assertNotContains(wrong_response, second_question.explanation)
 
         second_response = self.client.post(
             reverse("lesson_detail", args=[lesson.slug]),
@@ -160,7 +176,7 @@ class LearningLabTests(TestCase):
             self.client.session["learning_state"]["quiz_correct"][lesson.slug][str(first_question.id)],
             correct_first,
         )
-        self.assertContains(third_response, "Correct — saved.")
+        self.assertContains(third_response, "That’s right!")
         completion_response = self.client.post(
             reverse("lesson_detail", args=[lesson.slug]),
             {"next_question": "1"},
@@ -275,7 +291,7 @@ class LearningLabTests(TestCase):
                 {f"quiz_{question.id}": question.options[question.correct_index]},
             )
             self.client.post(lesson_url, {"next_question": "1"})
-        self.assertContains(quiz_response, "Correct answers so far:</strong> 3/3")
+        self.assertContains(quiz_response, "3 of 3 correct so far")
         self.assertContains(self.client.get(lesson_url), "Lesson completed")
         self.assertEqual(
             self.client.session["learning_state"]["completed"],

@@ -3,49 +3,76 @@
 {% block title %}{{ lesson.title }} | IT Skills Academy{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-  <a href="{% url 'path_detail' lesson.path.slug %}" class="btn btn-outline-secondary btn-sm mb-3">Back to {{ lesson.path.title }}</a>
+<div class="lesson-heading mb-4">
+  <a href="{% url 'path_detail' lesson.path.slug %}" class="back-link mb-4"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>{{ lesson.path.title }} topics</a>
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-      <p class="text-uppercase text-primary fw-semibold mb-1">{{ lesson.path.title }}</p>
-      <h1 class="fw-bold mb-0">{{ lesson.title }}</h1>
+      <p class="eyebrow mb-1">{{ lesson.path.title }} <span class="mx-1" aria-hidden="true">/</span> {{ lesson.difficulty }}</p>
+      <h1 class="display-6 fw-bold mb-0">{{ lesson.title }}</h1>
     </div>
-    <span class="badge bg-success fs-6">{{ lesson.difficulty }}</span>
+    {% if completion_status == 'completed' %}
+      <span class="difficulty-pill difficulty-complete"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Completed</span>
+    {% endif %}
   </div>
   <p class="lead text-muted mb-0">{{ lesson.short_description }}</p>
 </div>
 
-<div class="alert alert-primary" role="status">
-  Lesson step {{ current_step }} of 6. Complete each step to reveal the next one.
-</div>
+<nav class="lesson-stepper mb-4" aria-label="Lesson progress">
+  <ol>
+    <li class="{% if current_step >= 1 %}step-done{% endif %}{% if current_step == 1 %} step-current{% endif %}" {% if current_step == 1 %}aria-current="step"{% endif %}><span class="step-number">1</span><span class="step-label">Intro</span></li>
+    <li class="{% if current_step >= 2 %}step-done{% endif %}{% if current_step == 2 %} step-current{% endif %}" {% if current_step == 2 %}aria-current="step"{% endif %}><span class="step-number">2</span><span class="step-label">Learn</span></li>
+    <li class="{% if current_step >= 3 %}step-done{% endif %}{% if current_step == 3 %} step-current{% endif %}" {% if current_step == 3 %}aria-current="step"{% endif %}><span class="step-number">3</span><span class="step-label">Practice</span></li>
+    <li class="{% if current_step >= 4 %}step-done{% endif %}{% if current_step == 4 %} step-current{% endif %}" {% if current_step == 4 %}aria-current="step"{% endif %}><span class="step-number">4</span><span class="step-label">Review</span></li>
+    <li class="{% if current_step >= 5 %}step-done{% endif %}{% if current_step == 5 %} step-current{% endif %}" {% if current_step == 5 %}aria-current="step"{% endif %}><span class="step-number">5</span><span class="step-label">Quiz</span></li>
+    <li class="{% if current_step >= 6 %}step-done{% endif %}{% if current_step == 6 %} step-current{% endif %}" {% if current_step == 6 %}aria-current="step"{% endif %}><span class="step-number">6</span><span class="step-label">Finish</span></li>
+  </ol>
+  <p class="stepper-caption mb-0">Step {{ current_step }} of 6 <span aria-hidden="true">·</span> Work through each step at your own pace.</p>
+</nav>
 
 {% if current_step == 1 %}
-<section class="card shadow-sm border-0 mb-4">
+<section class="lesson-panel mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 1: Topic Introduction</h2>
-    <p>{{ lesson.introduction|linebreaksbr }}</p>
+    <p class="eyebrow mb-2">Start here</p>
+    <h2 class="h3 fw-bold">What you’ll learn</h2>
+    <div class="lesson-reading">{{ lesson.introduction|linebreaksbr }}</div>
     <form method="post">
       {% csrf_token %}
-      <button class="btn btn-primary" type="submit" name="advance_step" value="1">Continue to lesson</button>
+      <button class="btn btn-primary mt-3" type="submit" name="advance_step" value="1">Learn the concept <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></button>
     </form>
   </div>
 </section>
 {% elif current_step == 2 %}
-<section class="card shadow-sm border-0 mb-4">
+<section class="lesson-panel mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 2: Learn the Concept</h2>
-    <p>{{ lesson.explanation|linebreaksbr }}</p>
+    <p class="eyebrow mb-2">The key idea</p>
+    <h2 class="h3 fw-bold">Learn the concept</h2>
+    <div class="lesson-reading">{{ lesson.explanation|linebreaksbr }}</div>
+    {% if lesson.activity_type == 'code' and lesson.path.category == 'programming' and example_code %}
+      <aside class="worked-example mt-4" aria-labelledby="worked-example-title">
+        <div class="worked-example-heading">
+          <div class="worked-example-icon"><i class="bi bi-code-slash" aria-hidden="true"></i></div>
+          <div>
+            <p class="eyebrow mb-1">A quick example</p>
+            <h3 class="h5 fw-bold mb-0" id="worked-example-title">{{ example_title }}</h3>
+          </div>
+        </div>
+        <p class="text-muted mt-3 mb-2">Notice how this example uses the same language. It’s a reference, not the answer to your practice challenge.</p>
+        <pre class="sample-code"><code>{{ example_code }}</code></pre>
+        <p class="sample-note mb-0"><i class="bi bi-lightbulb me-2" aria-hidden="true"></i>Read each line, then look for a similar pattern in your own challenge.</p>
+      </aside>
+    {% endif %}
     <form method="post">
       {% csrf_token %}
-      <button class="btn btn-primary" type="submit" name="advance_step" value="2">Continue to the question</button>
+      <button class="btn btn-primary mt-4" type="submit" name="advance_step" value="2">Try it yourself <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></button>
     </form>
   </div>
 </section>
 {% elif current_step == 3 %}
-<section class="card shadow-sm border-0 mb-4">
+<section class="lesson-panel mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 3: Your Question or Practice</h2>
-    <p>{{ lesson.activity_prompt }}</p>
+    <p class="eyebrow mb-2">{% if lesson.activity_type == 'code' %}Your turn to practice{% else %}Think it through{% endif %}</p>
+    <h2 class="h3 fw-bold">{% if lesson.activity_type == 'code' %}Try the coding challenge{% else %}Choose your next step{% endif %}</h2>
+    <p class="practice-instructions">{{ lesson.activity_prompt }}</p>
     {% if lesson.slug == 'python-variables' %}
       <div class="expected-output-note mb-3">
         <strong>Expected output:</strong> The text you store in <code>name</code> (for example, <code>Alex</code>).
@@ -56,26 +83,27 @@
       <form method="post" id="practice-form">
         {% csrf_token %}
         <div class="mb-3">
-          <label class="form-label">Code editor</label>
-          <div id="code-editor" class="code-editor-shell" data-language="{{ lesson.path.slug }}" data-hint="{{ lesson.hint|escapejs }}"></div>
+          <label class="form-label fw-semibold" id="code-editor-label">Write your code</label>
+          <div id="code-editor" class="code-editor-shell" aria-labelledby="code-editor-label" data-language="{{ lesson.path.slug }}" data-hint="{{ lesson.hint|escapejs }}"></div>
           <textarea id="code-editor-value" name="submission" class="d-none">{{ lesson.starter_code }}</textarea>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
-          <button type="button" class="btn btn-outline-primary" onclick="runCode()">Run Code</button>
-          <button type="button" class="btn btn-outline-secondary" onclick="resetCode()">Reset Code</button>
-          <button type="button" class="btn btn-outline-info" onclick="showHint()">Show Hint</button>
+          <button type="button" class="btn btn-outline-primary" onclick="runCode()"><i class="bi bi-play-fill me-1" aria-hidden="true"></i>Preview output</button>
+          <button type="button" class="btn btn-outline-secondary" onclick="resetCode()"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Reset editor</button>
+          <button type="button" class="btn btn-outline-info" onclick="showHint()"><i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Show a hint</button>
         </div>
-        <pre id="code-output" class="console-output">Console output will appear here.</pre>
+        <label class="form-label fw-semibold" for="code-output">Output preview</label>
+        <pre id="code-output" class="console-output">Your preview will appear here.</pre>
         <div id="code-feedback" class="code-feedback code-feedback-neutral" role="status" aria-live="polite">
-          Submit your code to check it. Green means required parts were found; red shows items to review. Code is not executed on the server.
+          Your code is checked for the required parts. It is not executed on the server.
         </div>
-        <button type="submit" class="btn btn-primary">Submit Answer</button>
+        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-2" aria-hidden="true"></i>Check my code</button>
       </form>
     {% elif lesson.activity_type == 'support' or lesson.activity_type == 'concept' %}
       <form method="post">
         {% csrf_token %}
         {% for choice in lesson.activity_choices %}
-          <div class="form-check mb-2">
+          <div class="form-check quiz-option mb-2">
             <input class="form-check-input" type="radio" name="diagnosis" id="choice-{{ forloop.counter }}" value="{{ choice }}" required />
             <label class="form-check-label" for="choice-{{ forloop.counter }}">{{ choice }}</label>
           </div>
@@ -95,9 +123,10 @@
   </div>
 </section>
 {% elif current_step == 4 %}
-<section class="card shadow-sm border-0 mb-4">
+<section class="lesson-panel mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 4: Answer and Explanation</h2>
+    <p class="eyebrow mb-2">Review what you learned</p>
+    <h2 class="h3 fw-bold">Your answer and explanation</h2>
     {% if activity_feedback %}
       <div class="alert {% if activity_passed %}alert-success{% else %}alert-warning{% endif %}">
         {{ activity_feedback }}
@@ -170,42 +199,61 @@
   </div>
 </section>
 {% elif current_step == 5 %}
-<section class="card shadow-sm border-0 mb-4">
+<section class="lesson-panel quiz-panel mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 5: Knowledge Check</h2>
+    <div class="quiz-heading">
+      <div>
+        <p class="eyebrow mb-2">Quick knowledge check</p>
+        <h2 class="h3 fw-bold mb-1">Check your understanding</h2>
+        <p class="text-muted mb-0">Choose one answer. If you miss it, you can try again.</p>
+      </div>
+      <div class="quiz-question-count"><span class="quiz-question-count-label">Question</span><span>{{ question_number }}</span><span class="text-muted">/ {{ question_total }}</span></div>
+    </div>
     {% if active_quiz_item %}
       {% with quiz_item=active_quiz_item question=active_quiz_item.question %}
-      <p class="text-muted">Question {{ question_number }} of {{ question_total }}</p>
-      <form method="post">
+      <div class="quiz-progress mb-4" role="progressbar" aria-label="Quiz progress" aria-valuenow="{{ question_number }}" aria-valuemin="1" aria-valuemax="{{ question_total }}">
+        <div class="quiz-progress-bar" style="width: {% widthratio question_number question_total 100 %}%"></div>
+      </div>
+      <form method="post" class="quiz-form">
         {% csrf_token %}
-        <p class="fw-semibold mb-3">{{ question.question }}</p>
+        <fieldset class="quiz-fieldset">
+          <legend class="quiz-question mb-3">{{ question.question }}</legend>
         {% for option in question.options %}
-          <div class="form-check mb-2">
+          <div class="form-check quiz-option mb-2">
             <input class="form-check-input" type="radio" name="quiz_{{ question.id }}" id="question-{{ question.id }}-{{ forloop.counter }}" value="{{ option }}" {% if option == quiz_item.selected_answer %}checked{% endif %} {% if quiz_item.locked %}disabled{% endif %} required />
-            <label class="form-check-label" for="question-{{ question.id }}-{{ forloop.counter }}">{{ option }}</label>
+            <label class="form-check-label" for="question-{{ question.id }}-{{ forloop.counter }}">
+              <span class="quiz-choice-letter" aria-hidden="true">{{ forloop.counter }}</span>
+              <span>{{ option }}</span>
+            </label>
           </div>
         {% endfor %}
+        </fieldset>
         {% if quiz_item.status == 'correct' %}
-          <div class="alert alert-success mt-3">
-            <strong>Correct — saved.</strong> {{ quiz_item.explanation }}
+          <div class="quiz-feedback quiz-feedback-correct mt-4" role="status">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            <div><strong>That’s right!</strong><p class="mb-0 mt-1">{{ quiz_item.explanation }}</p></div>
           </div>
-          <button class="btn btn-primary" type="submit" name="next_question" value="1">
-            {% if has_next_question %}Continue to next question{% else %}Finish knowledge check{% endif %}
+          <button class="btn btn-primary btn-lg mt-3" type="submit" name="next_question" value="1">
+            {% if has_next_question %}Next question{% else %}Finish the quiz{% endif %}<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
           </button>
         {% elif quiz_item.status == 'wrong' %}
-          <div class="alert alert-danger mt-3">Not quite. Try this question again; the correct answer is not revealed yet.</div>
-          <button class="btn btn-primary" type="submit">Try again</button>
+          <div class="quiz-feedback quiz-feedback-retry mt-4" role="alert">
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+            <div><strong>Not quite — give it another try.</strong><p class="mb-0 mt-1">Review the lesson notes and choose a different answer. We’ll save it when it’s correct.</p></div>
+          </div>
+          <button class="btn btn-primary btn-lg mt-3" type="submit"><i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i>Try again</button>
         {% elif quiz_item.status == 'missing' %}
-          <div class="alert alert-warning mt-3">Choose an answer before continuing.</div>
-          <button class="btn btn-primary" type="submit">Check answer</button>
+          <div class="quiz-feedback quiz-feedback-retry mt-4" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><div><strong>Select an answer first.</strong><p class="mb-0 mt-1">Choose the option you think is best, then check it.</p></div></div>
+          <button class="btn btn-primary btn-lg mt-3" type="submit">Check my answer</button>
         {% else %}
-          <button class="btn btn-primary" type="submit">Check answer</button>
+          <button class="btn btn-primary btn-lg mt-3" type="submit"><i class="bi bi-check2 me-2" aria-hidden="true"></i>Check my answer</button>
         {% endif %}
       </form>
       {% endwith %}
       {% if quiz_summary %}
-        <div class="alert alert-info mt-4 mb-0">
-          <strong>Correct answers so far:</strong> {{ quiz_summary.score }}/{{ quiz_summary.total }}.
+        <div class="quiz-score mt-4">
+          <span><i class="bi bi-trophy me-2" aria-hidden="true"></i>{{ quiz_summary.score }} of {{ quiz_summary.total }} correct so far</span>
+          <span class="quiz-score-percent">{{ quiz_summary.percentage }}%</span>
         </div>
       {% endif %}
     {% else %}
@@ -218,14 +266,18 @@
   </div>
 </section>
 {% elif current_step == 6 %}
-<section class="card shadow-sm border-0 mb-4">
+<section class="lesson-panel completion-panel mb-4">
   <div class="card-body p-4">
-    <h2 class="h4 fw-bold">Step 6: Completion</h2>
     {% if completion_status == 'completed' %}
-      <p>You answered each knowledge-check question correctly and completed the practice activity.</p>
-      <span class="badge bg-success fs-6">Lesson completed</span>
+      <div class="completion-icon"><i class="bi bi-trophy-fill" aria-hidden="true"></i></div>
+      <p class="eyebrow mb-2">Nice work!</p>
+      <h2 class="h3 fw-bold">Lesson completed</h2>
+      <p class="text-muted">You passed the practice activity and answered the knowledge check correctly. Keep the momentum going with the next topic.</p>
+      <a class="btn btn-primary" href="{% url 'path_detail' lesson.path.slug %}"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Back to topics</a>
     {% else %}
-      <p>You finished the knowledge check. Complete the practice activity to finish this lesson.</p>
+      <p class="eyebrow mb-2">One more step</p>
+      <h2 class="h3 fw-bold">Finish the practice activity</h2>
+      <p class="text-muted">You’ve finished the knowledge check. Complete the practice activity to mark this lesson complete.</p>
       <form method="post" class="mt-3">
         {% csrf_token %}
         <button class="btn btn-primary" type="submit" name="retry_activity" value="1">Return to practice</button>

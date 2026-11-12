@@ -137,7 +137,49 @@ function initMonacoEditor() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', function () {
+function initializePage() {
+  const pathSearch = document.querySelector('[data-path-search]');
+  const pathCategory = document.querySelector('[data-path-category]');
+  const pathCards = Array.from(document.querySelectorAll('[data-path-card]'));
+  const pathsEmpty = document.querySelector('[data-paths-empty]');
+  const topicSearch = document.querySelector('[data-topic-search]');
+  const topicCards = Array.from(document.querySelectorAll('[data-topic-card]'));
+  const topicsEmpty = document.querySelector('[data-topics-empty]');
+
+  function filterCards(cards, input, emptyState, categorySelect) {
+    if (!input || !cards.length) {
+      return;
+    }
+
+    function updateResults() {
+      const query = input.value.trim().toLocaleLowerCase();
+      const category = categorySelect ? categorySelect.value : '';
+      let visibleCount = 0;
+
+      cards.forEach(function (card) {
+        const matchesText = (card.dataset.searchText || '').toLocaleLowerCase().includes(query);
+        const matchesCategory = !category || card.dataset.category === category;
+        const visible = matchesText && matchesCategory;
+        card.classList.toggle('d-none', !visible);
+        if (visible) {
+          visibleCount += 1;
+        }
+      });
+
+      if (emptyState) {
+        emptyState.classList.toggle('d-none', visibleCount > 0);
+      }
+    }
+
+    input.addEventListener('input', updateResults);
+    if (categorySelect) {
+      categorySelect.addEventListener('change', updateResults);
+    }
+  }
+
+  filterCards(pathCards, pathSearch, pathsEmpty, pathCategory);
+  filterCards(topicCards, topicSearch, topicsEmpty);
+
   const container = document.getElementById('code-editor');
   const hiddenField = document.getElementById('code-editor-value');
   if (container && hiddenField) {
@@ -147,4 +189,10 @@ window.addEventListener('DOMContentLoaded', function () {
     hiddenField.addEventListener('input', markCodeAsUnverified);
   }
   initMonacoEditor();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePage, { once: true });
+} else {
+  initializePage();
+}

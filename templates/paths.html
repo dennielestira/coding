@@ -12,12 +12,36 @@
   <a href="{% url 'dashboard' %}" class="btn btn-outline-primary"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Dashboard</a>
 </section>
 
+<section class="browse-tools mb-4" aria-label="Find a learning path">
+  <div class="row g-3">
+    <div class="col-md-8">
+      <label class="form-label fw-semibold" for="path-search">Search learning paths</label>
+      <div class="search-field">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input id="path-search" class="form-control" type="search" placeholder="Try Python, networking, or hardware" autocomplete="off" data-path-search />
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label fw-semibold" for="path-category">Filter by topic</label>
+      <select id="path-category" class="form-select" data-path-category>
+        <option value="">All topics</option>
+        <option value="programming">Programming and coding</option>
+        <option value="it_support">IT support</option>
+        <option value="hardware">Computer hardware</option>
+        <option value="networking">Networking</option>
+        <option value="security">Cybersecurity</option>
+      </select>
+    </div>
+  </div>
+  <p class="small text-muted mt-2 mb-0">Choose a path to see its lessons. You can learn at your own pace.</p>
+</section>
+
 <div class="row g-4">
   {% for path in paths %}
-    <div class="col-md-6 col-xl-4">
+    <div class="col-md-6 col-xl-4" data-path-card data-category="{{ path.category }}" data-search-text="{{ path.title|lower }} {{ path.description|lower }} {{ path.get_category_display|lower }}">
       <a href="{% url 'path_detail' path.slug %}" class="text-decoration-none text-reset">
         <article class="path-card h-100">
-          <div class="path-icon bg-soft"><i class="bi {{ path.icon }}"></i></div>
+          <div class="path-icon bg-soft"><i class="bi {{ path.icon }}" aria-hidden="true"></i></div>
           <span class="path-category mb-3">{{ path.get_category_display }}</span>
           <h2 class="h4 fw-bold">{{ path.title }}</h2>
           <p class="text-muted">{{ path.description }}</p>
@@ -28,14 +52,13 @@
         </article>
       </a>
     </div>
-  {% empty %}
-    <div class="col-12">
-      <div class="empty-state text-center">
-        <i class="bi bi-journal-x" aria-hidden="true"></i>
-        <h2 class="h4 fw-bold mt-3">No learning paths yet</h2>
-        <p class="text-muted mb-0">Check back soon — new paths are on the way.</p>
-      </div>
-    </div>
   {% endfor %}
+  <div class="col-12 d-none" data-paths-empty>
+    <div class="empty-state text-center">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <h2 class="h4 fw-bold mt-3">No paths match that search</h2>
+      <p class="text-muted mb-0">Try a different word or choose “All topics.”</p>
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -3,33 +3,55 @@
 {% block title %}{{ path.title }} | IT Skills Academy{% endblock %}
 
 {% block content %}
-<div class="mb-4">
+<section class="path-overview-card mb-4">
   <a href="{% url 'path_index' %}" class="back-link mb-4"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>All learning paths</a>
   <div class="d-flex align-items-center gap-3 mb-2">
-    <div class="path-icon bg-soft"><i class="bi {{ path.icon }}"></i></div>
+    <div class="path-icon bg-soft"><i class="bi {{ path.icon }}" aria-hidden="true"></i></div>
     <div>
       <p class="eyebrow mb-1">{{ path.get_category_display }}</p>
       <h1 class="display-6 fw-bold mb-0">{{ path.title }}</h1>
     </div>
   </div>
   <p class="lead text-muted mt-3 mb-4">{{ path.description }}</p>
-  <p class="path-overview mb-0"><i class="bi bi-journals me-2" aria-hidden="true"></i>{{ lessons|length }} practical lessons <span class="mx-2" aria-hidden="true">·</span> Learn at your own pace</p>
-</div>
+  <div class="path-progress-row">
+    <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+      <span class="path-overview"><i class="bi bi-journals me-2" aria-hidden="true"></i>{{ lessons|length }} practical lessons</span>
+      <span class="path-overview">{{ completed_count }} of {{ lessons|length }} completed</span>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Path completion" aria-valuenow="{{ progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+    </div>
+  </div>
+</section>
+
+<section class="browse-tools mb-4" aria-label="Find a lesson">
+  <label class="form-label fw-semibold" for="topic-search">Find a lesson</label>
+  <div class="search-field">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input id="topic-search" class="form-control" type="search" placeholder="Search lessons in {{ path.title }}" autocomplete="off" data-topic-search />
+  </div>
+  <p class="small text-muted mt-2 mb-0">Lessons are arranged in a suggested order. Start at the beginning or choose a topic you need.</p>
+</section>
 
 <div class="row g-4">
   {% for lesson in lessons %}
-    <div class="col-md-6">
+    <div class="col-md-6" data-topic-card data-search-text="{{ lesson.title|lower }} {{ lesson.short_description|lower }} {{ lesson.difficulty|lower }}">
       <a href="{% url 'lesson_detail' lesson.slug %}" class="text-decoration-none text-reset">
-        <article class="lesson-card h-100">
+        <article class="lesson-card h-100 {% if lesson.slug in completed_lessons %}lesson-card-completed{% endif %}">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="difficulty-pill {% if lesson.difficulty == 'Intermediate' %}difficulty-intermediate{% else %}difficulty-beginner{% endif %}">{{ lesson.difficulty }}</span>
-            <span class="lesson-number">LESSON {{ forloop.counter }}</span>
+            <span class="lesson-number">TOPIC {{ forloop.counter }}</span>
           </div>
           <h2 class="h4 fw-bold">{{ lesson.title }}</h2>
           <p class="text-muted">{{ lesson.short_description }}</p>
           <div class="d-flex justify-content-between align-items-center mt-auto">
-            <span class="lesson-open">Start lesson <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></span>
-            <i class="bi bi-play-circle lesson-play" aria-hidden="true"></i>
+            {% if lesson.slug in completed_lessons %}
+              <span class="lesson-open lesson-done"><i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>Completed</span>
+              <i class="bi bi-check-circle-fill lesson-play lesson-done" aria-hidden="true"></i>
+            {% else %}
+              <span class="lesson-open">Open lesson <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></span>
+              <i class="bi bi-play-circle lesson-play" aria-hidden="true"></i>
+            {% endif %}
           </div>
         </article>
       </a>
@@ -41,5 +63,12 @@
       </div>
     </div>
   {% endfor %}
+  <div class="col-12 d-none" data-topics-empty>
+    <div class="empty-state text-center">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <h2 class="h4 fw-bold mt-3">No lessons match that search</h2>
+      <p class="text-muted mb-0">Try a different title or keyword.</p>
+    </div>
+  </div>
 </div>
 {% endblock %}
